@@ -24,6 +24,7 @@ import {
   Subtitle,
   Title,
 } from "./style";
+import { authAPI } from "../../config/api";
 
 export default function LoginScreen({ onSwitchToRegister, onLogin }) {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function LoginScreen({ onSwitchToRegister, onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -45,6 +47,10 @@ export default function LoginScreen({ onSwitchToRegister, onLogin }) {
         ...prev,
         [field]: "",
       }));
+    }
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError("");
     }
   };
 
@@ -67,13 +73,54 @@ export default function LoginScreen({ onSwitchToRegister, onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    if (onLogin) {
-      onLogin();
-    } else {
-      navigate("/dashboard");
+    setApiError("");
+
+    try {
+      const response = await authAPI.login({
+        email: formData.email.trim(),
+        password: formData.password,
+      });
+
+      if (!response.ok) {
+        // Erro do servidor
+        if (response.data.errors && Array.isArray(response.data.errors)) {
+          // Erros de validação do backend
+          const backendErrors = {};
+          response.data.errors.forEach(error => {
+            if (error.path === 'email') backendErrors.email = error.msg;
+            if (error.path === 'password') backendErrors.password = error.msg;
+          });
+          setErrors(backendErrors);
+        } else {
+          // Erro geral do servidor
+          setApiError(response.data.message || 'Erro ao fazer login');
+        }
+        return;
+      }
+
+      // Sucesso!
+      console.log('Login realizado:', response.data);
+      
+      // Salvar token no localStorage
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      // Redirecionar ou chamar callback
+      if (onLogin) {
+        onLogin(response.data);
+      } else {
+        navigate("/dashboard");
+      }
+
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      setApiError('Erro de conexão. Verifique se o servidor está rodando.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,11 +131,27 @@ export default function LoginScreen({ onSwitchToRegister, onLogin }) {
           <IconBox>
             <Lock size={32} style={{ color: "#fff" }} />
           </IconBox>
-          <Title>Bem-vindo ao</Title>
+          <Title>Bem-vindo ao 12WEEKS</Title>
           <Subtitle>Entre na sua conta para continuar</Subtitle>
         </Header>
         <FormCard>
           <Form onSubmit={handleSubmit}>
+            {/* Erro geral da API */}
+            {apiError && (
+              <div style={{
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+                color: '#dc2626',
+                fontSize: '14px',
+                textAlign: 'center'
+              }}>
+                {apiError}
+              </div>
+            )}
+            
             <Field>
               <Label htmlFor="email">Email</Label>
               <InputWrapper>

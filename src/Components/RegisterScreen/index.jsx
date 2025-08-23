@@ -28,6 +28,7 @@ import {
   
 } from "./style";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, User } from "lucide-react";
+import { authAPI } from "../../config/api";
 
 export default function RegisterScreen({ onSwitchToLogin, onRegister }) {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ export default function RegisterScreen({ onSwitchToLogin, onRegister }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -53,6 +55,10 @@ export default function RegisterScreen({ onSwitchToLogin, onRegister }) {
         ...prev,
         [field]: "",
       }));
+    }
+    // Clear API error when user starts typing
+    if (apiError) {
+      setApiError("");
     }
   };
 
@@ -93,15 +99,54 @@ export default function RegisterScreen({ onSwitchToLogin, onRegister }) {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setApiError("");
 
-    // Simular chamada de API
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      const response = await authAPI.register({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      });
 
-    setIsLoading(false);
-    if (onRegister) {
-      onRegister();
-    } else {
-      navigate("/dashboard");
+      if (!response.ok) {
+        // Erro do servidor
+        if (response.data.errors && Array.isArray(response.data.errors)) {
+          // Erros de validação do backend
+          const backendErrors = {};
+          response.data.errors.forEach(error => {
+            if (error.path === 'name') backendErrors.name = error.msg;
+            if (error.path === 'email') backendErrors.email = error.msg;
+            if (error.path === 'password') backendErrors.password = error.msg;
+          });
+          setErrors(backendErrors);
+        } else {
+          // Erro geral do servidor
+          setApiError(response.data.message || 'Erro ao criar conta');
+        }
+        return;
+      }
+
+      // Sucesso!
+      console.log('Usuário criado:', response.data);
+      
+      // Salvar token no localStorage
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      // Redirecionar ou chamar callback
+      if (onRegister) {
+        onRegister(response.data);
+      } else {
+        navigate("/dashboard");
+      }
+
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      setApiError('Erro de conexão. Verifique se o servidor está rodando.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -123,6 +168,22 @@ export default function RegisterScreen({ onSwitchToLogin, onRegister }) {
         </Header>
         <FormCard>
           <Form onSubmit={handleSubmit}>
+            {/* Erro geral da API */}
+            {apiError && (
+              <div style={{
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+                color: '#dc2626',
+                fontSize: '14px',
+                textAlign: 'center'
+              }}>
+                {apiError}
+              </div>
+            )}
+            
             <Field>
               <Label htmlFor="name">Nome completo</Label>
               <InputWrapper>
