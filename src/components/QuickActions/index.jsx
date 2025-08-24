@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Plus, UserPlus } from "lucide-react";
 import ActionCard from "../ActionCard";
+import FriendInviteModal from "../FriendInviteModal";
 import {
   QuickActionsGrid,
 } from "./style";
 
 export default function QuickActions() {
+  const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
+
   const actions = [
     {
       id: 1,
@@ -26,26 +30,32 @@ export default function QuickActions() {
       description: "Convide pessoas para se juntarem à plataforma",
       actionText: "Enviar Convite",
       onClick: () => {
-
-        alert("Convite enviado!");
+        setIsFriendModalOpen(true);
       }
     }
   ];
 
   return (
-    <QuickActionsGrid>
-      {actions.map((action) => (
-        <ActionCard
-          key={action.id}
-          icon={action.icon}
-          iconColor={action.iconColor}
-          title={action.title}
-          description={action.description}
-          actionText={action.actionText}
-          onClick={action.onClick}
-        />
-      ))}
-    </QuickActionsGrid>
+    <>
+      <QuickActionsGrid>
+        {actions.map((action) => (
+          <ActionCard
+            key={action.id}
+            icon={action.icon}
+            iconColor={action.iconColor}
+            title={action.title}
+            description={action.description}
+            actionText={action.actionText}
+            onClick={action.onClick}
+          />
+        ))}
+      </QuickActionsGrid>
+
+      <FriendInviteModal 
+        isOpen={isFriendModalOpen}
+        onClose={() => setIsFriendModalOpen(false)}
+      />
+    </>
   );
 }
 

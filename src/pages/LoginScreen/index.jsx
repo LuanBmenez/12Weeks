@@ -79,15 +79,21 @@ export default function LoginScreen() {
     setApiError("");
 
     try {
+      console.log('Tentando fazer login...');
       const result = await login({
         email: formData.email.trim(),
         password: formData.password,
       });
 
-      if (!result.success) {
+      console.log('Resultado do login:', result);
+
+      if (result.success) {
+        console.log('Login bem-sucedido, redirecionando...');
+        
+      } else {
+        console.log('Erro no login:', result.error);
         setApiError(result.error);
       }
-
 
     } catch (error) {
       console.error('Erro no login:', error);

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Users, Bell, Settings, LogOut } from "lucide-react";
+import { Users } from "lucide-react";
 import SearchBar from "../SearchBar";
 import UserActions from "../UserActions";
 import {
@@ -11,8 +10,6 @@ import {
 } from "./style";
 
 export default function DashboardHeader({ onLogout }) {
-  const [showNotifications, setShowNotifications] = useState(false);
-
   return (
     <Header>
       <HeaderInner>
@@ -25,11 +22,7 @@ export default function DashboardHeader({ onLogout }) {
         
         <SearchBar />
         
-        <UserActions 
-          showNotifications={showNotifications}
-          onToggleNotifications={() => setShowNotifications(!showNotifications)}
-          onLogout={onLogout}
-        />
+        <UserActions onLogout={onLogout} />
       </HeaderInner>
     </Header>
   );

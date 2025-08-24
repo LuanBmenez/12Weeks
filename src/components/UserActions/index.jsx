@@ -7,18 +7,10 @@ import {
   LogoutButton,
 } from "./style";
 
-export default function UserActions({ 
-  showNotifications, 
-  onToggleNotifications, 
-  onLogout 
-}) {
+export default function UserActions({ onLogout }) {
   return (
     <UserActionsContainer>
-      <IconButton onClick={onToggleNotifications}>
-        <Bell size={24} />
-        <NotificationDot />
-        {showNotifications && <NotificationDropdown />}
-      </IconButton>
+      <NotificationDropdown />
       
       <IconButton>
         <Settings size={24} />

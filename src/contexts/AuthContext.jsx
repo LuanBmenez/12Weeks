@@ -9,45 +9,38 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-
   const logout = useCallback(async () => {
     try {
-
       if (token) {
         await authAPI.logout();
       }
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {
-
       setUser(null);
       setToken(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      
-
       navigate('/login');
     }
   }, [token, navigate]);
 
-
   const verifyToken = useCallback(async () => {
     try {
       const response = await authAPI.getProfile();
-      if (response.ok) {
-        setUser(response.data.user);
-      } else {
-
-        logout();
-      }
+      // Com axios, a resposta está em response.data
+      setUser(response.data.user);
+      setLoading(false);
     } catch (error) {
       console.error('Erro ao verificar token:', error);
-      logout();
-    } finally {
-      setLoading(false);
+      // Se der erro 401, fazer logout
+      if (error.response?.status === 401) {
+        logout();
+      } else {
+        setLoading(false);
+      }
     }
   }, [logout]);
-
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,8 +50,6 @@ export const AuthProvider = ({ children }) => {
       if (savedToken && savedUser) {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
-        
-            
         await verifyToken();
       } else {
         setLoading(false);
@@ -72,28 +63,24 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(credentials);
       
-      if (response.ok) {
-        const { user, token } = response.data;
-        
-        setUser(user);
-        setToken(token);
-        
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        navigate('/dashboard');
-        return { success: true };
-      } else {
-        return { 
-          success: false, 
-          error: response.data.message || 'Erro no login' 
-        };
-      }
+      // Com axios, a resposta está em response.data
+      const { user, token } = response.data;
+      
+      setUser(user);
+      setToken(token);
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Redirecionar para o dashboard
+      navigate('/dashboard');
+      return { success: true };
     } catch (error) {
       console.error('Erro no login:', error);
+      const errorMessage = error.response?.data?.message || 'Erro de conexão';
       return { 
         success: false, 
-        error: 'Erro de conexão' 
+        error: errorMessage
       };
     }
   };
@@ -102,28 +89,24 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData);
       
-      if (response.ok) {
-        const { user, token } = response.data;
-        
-        setUser(user);
-        setToken(token);
-        
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        navigate('/dashboard');
-        return { success: true };
-      } else {
-        return { 
-          success: false, 
-          error: response.data.message || 'Erro no registro' 
-        };
-      }
+      // Com axios, a resposta está em response.data
+      const { user, token } = response.data;
+      
+      setUser(user);
+      setToken(token);
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Redirecionar para o dashboard
+      navigate('/dashboard');
+      return { success: true };
     } catch (error) {
       console.error('Erro no registro:', error);
+      const errorMessage = error.response?.data?.message || 'Erro de conexão';
       return { 
         success: false, 
-        error: 'Erro de conexão' 
+        error: errorMessage
       };
     }
   };

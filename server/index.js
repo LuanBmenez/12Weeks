@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
+import friendRoutes from './routes/friends.js';
 
 dotenv.config();
 
@@ -36,13 +37,14 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/12weeks')
 
 // Rotas
 app.use('/api/auth', authRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'API 12Weeks rodando!', status: 'online' });
 });
 
 // Middleware de erro
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
     message: 'Erro interno do servidor',

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -22,6 +23,56 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Senha é obrigatória'],
     minlength: [6, 'Senha deve ter pelo menos 6 caracteres']
   },
+  friendCode: {
+    type: String,
+    unique: true,
+    required: true,
+    default: function() {
+      return this.generateFriendCode();
+    }
+  },
+  friends: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  friendRequests: [{
+    from: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending'
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  notifications: [{
+    type: {
+      type: String,
+      enum: ['friend_request', 'friend_accepted', 'friend_rejected', 'friend_removed'],
+      required: true
+    },
+    from: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    message: {
+      type: String,
+      required: true
+    },
+    read: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -34,13 +85,42 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Método para gerar código único de amigo
+userSchema.methods.generateFriendCode = function() {
+  return crypto.randomBytes(4).toString('hex').toUpperCase();
+};
 
+// Middleware para garantir que o friendCode seja único
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') && !this.isNew) return next();
   
   try {
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
+    // Gerar senha hash se necessário
+    if (this.isModified('password')) {
+      const salt = await bcrypt.genSalt(12);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
+    
+    // Garantir que o friendCode seja único
+    if (this.isNew || this.isModified('friendCode')) {
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!isUnique && attempts < maxAttempts) {
+        this.friendCode = this.generateFriendCode();
+        const existingUser = await mongoose.model('User').findOne({ friendCode: this.friendCode });
+        if (!existingUser) {
+          isUnique = true;
+        }
+        attempts++;
+      }
+      
+      if (!isUnique) {
+        throw new Error('Não foi possível gerar um código único de amigo');
+      }
+    }
+    
     next();
   } catch (error) {
     next(error);
