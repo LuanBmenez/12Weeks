@@ -50,14 +50,14 @@ export default function RegisterScreen() {
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
+
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
       }));
     }
-    // Clear API error when user starts typing
+
     if (apiError) {
       setApiError("");
     }
@@ -112,7 +112,7 @@ export default function RegisterScreen() {
       if (!result.success) {
         setApiError(result.error);
       }
-      // Se der sucesso, o contexto já redireciona para /dashboard
+
 
     } catch (error) {
       console.error('Erro na requisição:', error);
@@ -138,7 +138,7 @@ export default function RegisterScreen() {
         </Header>
         <FormCard>
           <Form onSubmit={handleSubmit}>
-            {/* Erro geral da API */}
+    
             {apiError && (
               <div style={{
                 backgroundColor: '#fef2f2',

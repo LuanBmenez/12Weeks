@@ -19,28 +19,17 @@ export default function RecentActivity() {
   const recentRooms = [
     {
       id: 1,
-      name: "Reunião Equipe",
+      name: "Primeiras metas",
       participants: 8,
       lastActivity: "2 min atrás",
     },
-    {
-      id: 2,
-      name: "Brainstorm Produto",
-      participants: 5,
-      lastActivity: "1 hora atrás",
-    },
-    {
-      id: 3,
-      name: "Review Semanal",
-      participants: 12,
-      lastActivity: "1 dia atrás",
-    },
+   
   ];
 
   return (
     <RecentActivityCard>
       <RecentHeader>
-        <RecentTitle>Salas Recentes</RecentTitle>
+        <RecentTitle>Suas Salas</RecentTitle>
         <RecentButton>Ver todas</RecentButton>
       </RecentHeader>
       <RecentList>

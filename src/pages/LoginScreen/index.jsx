@@ -49,7 +49,7 @@ export default function LoginScreen() {
         [field]: "",
       }));
     }
-    // Clear API error when user starts typing
+
     if (apiError) {
       setApiError("");
     }
@@ -87,7 +87,7 @@ export default function LoginScreen() {
       if (!result.success) {
         setApiError(result.error);
       }
-      // Se der sucesso, o contexto já redireciona para /dashboard
+
 
     } catch (error) {
       console.error('Erro no login:', error);
@@ -109,7 +109,6 @@ export default function LoginScreen() {
         </Header>
         <FormCard>
           <Form onSubmit={handleSubmit}>
-            {/* Erro geral da API */}
             {apiError && (
               <div style={{
                 backgroundColor: '#fef2f2',

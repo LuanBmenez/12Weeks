@@ -9,35 +9,35 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Declarar logout primeiro
+
   const logout = useCallback(async () => {
     try {
-      // Chamar API de logout se houver token
+
       if (token) {
         await authAPI.logout();
       }
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {
-      // Limpar estado local
+
       setUser(null);
       setToken(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
-      // Redirecionar para login
+
       navigate('/login');
     }
   }, [token, navigate]);
 
-  // Depois declarar verifyToken que usa logout
+
   const verifyToken = useCallback(async () => {
     try {
       const response = await authAPI.getProfile();
       if (response.ok) {
         setUser(response.data.user);
       } else {
-        // Token inválido, limpar dados
+
         logout();
       }
     } catch (error) {
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [logout]);
 
-  // Agora o useEffect pode usar verifyToken
+
   useEffect(() => {
     const checkAuth = async () => {
       const savedToken = localStorage.getItem('token');
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
         
-        // Verificar se o token ainda é válido
+            
         await verifyToken();
       } else {
         setLoading(false);

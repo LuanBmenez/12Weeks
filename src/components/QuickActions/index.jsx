@@ -26,7 +26,7 @@ export default function QuickActions() {
       description: "Convide pessoas para se juntarem à plataforma",
       actionText: "Enviar Convite",
       onClick: () => {
-        // Lógica para convidar amigo
+
         alert("Convite enviado!");
       }
     }

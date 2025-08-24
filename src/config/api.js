@@ -1,4 +1,4 @@
-// Configuração da API
+
 export const API_CONFIG = {
   BASE_URL: 'http://localhost:3001/api',
   ENDPOINTS: {
@@ -44,7 +44,7 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
-// Funções específicas para autenticação
+
 export const authAPI = {
   register: (userData) => 
     apiRequest(API_CONFIG.ENDPOINTS.AUTH.REGISTER, {
