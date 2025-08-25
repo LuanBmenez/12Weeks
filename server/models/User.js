@@ -90,23 +90,23 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Método para gerar código único de amigo
+
 userSchema.methods.generateFriendCode = function() {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
 };
 
-// Middleware para garantir que o friendCode seja único
+
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password') && !this.isNew) return next();
   
   try {
-    // Gerar senha hash se necessário
+    
     if (this.isModified('password')) {
       const salt = await bcrypt.genSalt(12);
       this.password = await bcrypt.hash(this.password, salt);
     }
     
-    // Garantir que o friendCode seja único
+    
     if (this.isNew || this.isModified('friendCode')) {
       let isUnique = false;
       let attempts = 0;

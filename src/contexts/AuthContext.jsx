@@ -28,12 +28,12 @@ export const AuthProvider = ({ children }) => {
   const verifyToken = useCallback(async () => {
     try {
       const response = await authAPI.getProfile();
-      // Com axios, a resposta está em response.data
+      
       setUser(response.data.user);
       setLoading(false);
     } catch (error) {
       console.error('Erro ao verificar token:', error);
-      // Se der erro 401, fazer logout
+      
       if (error.response?.status === 401) {
         logout();
       } else {
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(credentials);
       
-      // Com axios, a resposta está em response.data
+      
       const { user, token } = response.data;
       
       setUser(user);
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
-      // Redirecionar para o dashboard
+      
       navigate('/dashboard');
       return { success: true };
     } catch (error) {
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData);
       
-      // Com axios, a resposta está em response.data
+      
       const { user, token } = response.data;
       
       setUser(user);
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
-      // Redirecionar para o dashboard
+      
       navigate('/dashboard');
       return { success: true };
     } catch (error) {

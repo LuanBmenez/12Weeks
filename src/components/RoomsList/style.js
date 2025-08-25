@@ -1,89 +1,20 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-  .error {
-    text-align: center;
-    padding: 40px;
-    color: #dc2626;
-
-    button {
-      background: #dc2626;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 16px;
-      font-weight: 500;
-
-      &:hover {
-        background: #b91c1c;
-      }
-    }
-  }
-
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-
-    .modal {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-
-      h3 {
-        margin: 0 0 16px 0;
-        color: #1f2937;
-      }
-
-      p {
-        margin: 0 0 20px 0;
-        color: #6b7280;
-      }
-
-      button {
-        background: #3b82f6;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-
-        &:hover {
-          background: #2563eb;
-        }
-      }
-    }
-  }
+  padding: 24px;
 `;
 
 export const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 1rem;
 `;
 
 export const Title = styled.h1`
-  font-size: 32px;
+  font-size: 2rem;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
@@ -93,22 +24,21 @@ export const CreateButton = styled.button`
   background: #3b82f6;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 1rem;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 8px;
-
+  gap: 0.5rem;
+  
   &:hover {
     background: #2563eb;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
-
+  
   &:active {
     transform: translateY(0);
   }
@@ -116,152 +46,78 @@ export const CreateButton = styled.button`
 
 export const RoomsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
-
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  
   .room-card {
     background: white;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     transition: all 0.2s;
-    border: 2px solid transparent;
-
+    border: 1px solid #e5e7eb;
+    
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       border-color: #3b82f6;
     }
-
-    .room-avatar {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 20px;
-      position: relative;
-
-      .participants-preview {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
-
-      .participant {
-        position: absolute;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: 3px solid white;
-        overflow: hidden;
-        background: #3b82f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 16px;
-
-        &.overlap {
-          top: 15px;
-        }
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .initials {
-          font-size: 18px;
-          font-weight: 700;
-        }
-      }
-
-      .default-avatar {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: #f3f4f6;
-        border: 3px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-      }
-    }
-
-    .room-info {
-      text-align: center;
-      margin-bottom: 20px;
-
-      .room-name {
-        font-size: 20px;
-        font-weight: 700;
+    
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      
+      h3 {
+        margin: 0;
         color: #1f2937;
-        margin: 0 0 8px 0;
-        line-height: 1.3;
+        font-size: 1.25rem;
+        font-weight: 600;
+        flex: 1;
       }
-
-      .room-description {
+      
+      .participant-count {
+        background: #f3f4f6;
         color: #6b7280;
-        font-size: 14px;
-        line-height: 1.4;
-        margin: 0 0 16px 0;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .room-meta {
-        display: flex;
-        justify-content: center;
-        gap: 16px;
-        font-size: 12px;
-        color: #9ca3af;
-
-        .member-count {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-
-          &::before {
-            content: '👥';
-            font-size: 14px;
-          }
-        }
-
-        .room-date {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-
-          &::before {
-            content: '📅';
-            font-size: 14px;
-          }
-        }
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
       }
     }
-
-    .room-actions {
-      text-align: center;
-
-      .enter-room {
-        background: #3b82f6;
+    
+    .room-description {
+      color: #6b7280;
+      margin: 0 0 1.5rem 0;
+      line-height: 1.5;
+      font-size: 0.9rem;
+    }
+    
+    .room-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .creation-date {
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+      
+      .enter-button {
+        background: #10b981;
         color: white;
         border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
         cursor: pointer;
         font-weight: 500;
-        font-size: 14px;
+        font-size: 0.875rem;
         transition: background-color 0.2s;
-        width: 100%;
-
+        
         &:hover {
-          background: #2563eb;
+          background: #059669;
         }
       }
     }
@@ -270,124 +126,230 @@ export const RoomsGrid = styled.div`
 
 export const EmptyState = styled.div`
   text-align: center;
-  padding: 80px 20px;
-  color: #6b7280;
-
+  padding: 4rem 2rem;
+  
   .empty-icon {
-    font-size: 64px;
-    margin-bottom: 24px;
+    font-size: 4rem;
+    margin-bottom: 1rem;
   }
-
+  
   h3 {
-    font-size: 24px;
-    font-weight: 600;
-    color: #374151;
-    margin: 0 0 12px 0;
+    color: #1f2937;
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
   }
-
+  
   p {
-    font-size: 16px;
-    margin: 0 0 32px 0;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    color: #6b7280;
+    margin: 0 0 2rem 0;
+    font-size: 1.1rem;
   }
-
+  
   button {
     background: #3b82f6;
     color: white;
     border: none;
-    padding: 16px 32px;
-    border-radius: 8px;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 16px;
+    font-weight: 500;
+    font-size: 1.1rem;
     transition: all 0.2s;
-
+    
     &:hover {
       background: #2563eb;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
     }
   }
 `;
 
 export const LoadingSpinner = styled.div`
-  text-align: center;
-  padding: 80px 20px;
-  color: #6b7280;
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #e5e7eb;
-    border-top: 4px solid #3b82f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+  
+  &::after {
+    content: '';
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #3b82f6;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: 0 auto 16px;
   }
-
-  p {
-    font-size: 16px;
-    margin: 0;
-  }
-
+  
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
 `;
 
-// Responsividade
-export const ResponsiveContainer = styled(Container)`
-  @media (max-width: 768px) {
-    padding: 16px;
+export const ResponsiveContainer = styled.div`
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+`;
 
-    ${Header} {
-      flex-direction: column;
-      align-items: stretch;
-      text-align: center;
-    }
 
-    ${Title} {
-      font-size: 24px;
-    }
+export const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
 
-    ${CreateButton} {
-      width: 100%;
-      justify-content: center;
-    }
+export const ModalContent = styled.div`
+  background: white;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+`;
 
-    ${RoomsGrid} {
-      grid-template-columns: 1fr;
-      gap: 16px;
+export const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+`;
 
-      .room-card {
-        padding: 20px;
+export const ModalTitle = styled.h2`
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+`;
 
-        .room-avatar {
-          width: 60px;
-          height: 60px;
+export const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+`;
 
-          .participant {
-            width: 40px;
-            height: 40px;
-            font-size: 14px;
+export const ModalBody = styled.div`
+  padding: 1.5rem;
+`;
 
-            .initials {
-              font-size: 16px;
-            }
-          }
+export const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
 
-          .default-avatar {
-            font-size: 24px;
-          }
-        }
+export const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
 
-        .room-info .room-name {
-          font-size: 18px;
-        }
-      }
-    }
+export const Label = styled.label`
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+`;
+
+export const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+`;
+
+export const TextArea = styled.textarea`
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
+`;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+export const CancelButton = styled.button`
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #e5e7eb;
+  }
+`;
+
+export const SubmitButton = styled.button`
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  
+  &:hover:not(:disabled) {
+    background: #2563eb;
+  }
+  
+  &:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
   }
 `;

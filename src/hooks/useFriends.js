@@ -117,15 +117,15 @@ export const useFriends = () => {
     }
   };
 
-  // Remover amigo
+  
   const removeFriend = async (friendId) => {
     try {
       await api.delete(`/friends/remove/${friendId}`);
       
-      // Atualizar lista local
+      
       setFriends(prev => prev.filter(friend => friend._id !== friendId));
       
-      // Adicionar notificação local
+      
       addNotification({
         _id: Date.now().toString(),
         type: 'friend_removed',

@@ -54,6 +54,10 @@ const roomSchema = new mongoose.Schema({
       goalId: {
         type: mongoose.Schema.Types.ObjectId
       },
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
       completed: {
         type: Boolean,
         default: false
@@ -91,7 +95,7 @@ const roomSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Middleware para calcular porcentagem diária
+
 roomSchema.methods.calculateDailyCompletion = function(date) {
   const dailyProgress = this.dailyProgress.find(progress => 
     progress.date.toDateString() === date.toDateString()
@@ -105,7 +109,7 @@ roomSchema.methods.calculateDailyCompletion = function(date) {
   return dailyProgress?.dailyPercentage || 0;
 };
 
-// Middleware para calcular progresso semanal
+
 roomSchema.methods.calculateWeeklyProgress = function() {
   const today = new Date();
   const weekStart = new Date(today);
@@ -120,7 +124,7 @@ roomSchema.methods.calculateWeeklyProgress = function() {
     const totalPercentage = weekProgress.reduce((sum, progress) => sum + progress.dailyPercentage, 0);
     const weeklyPercentage = totalPercentage / weekProgress.length;
     
-    // Atualizar ou adicionar progresso da semana atual
+    
     const existingWeekIndex = this.weeklyProgress.weeklyPercentages.findIndex(
       wp => wp.week === this.weeklyProgress.currentWeek
     );
@@ -136,7 +140,7 @@ roomSchema.methods.calculateWeeklyProgress = function() {
       });
     }
     
-    // Calcular porcentagem geral das 12 semanas
+    
     if (this.weeklyProgress.weeklyPercentages.length > 0) {
       const totalOverall = this.weeklyProgress.weeklyPercentages.reduce((sum, wp) => sum + wp.percentage, 0);
       this.weeklyProgress.overallPercentage = totalOverall / this.weeklyProgress.weeklyPercentages.length;
@@ -148,13 +152,13 @@ roomSchema.methods.calculateWeeklyProgress = function() {
   return 0;
 };
 
-// Middleware para verificar se deve avançar para próxima semana
+
 roomSchema.methods.checkWeekAdvance = function() {
   const today = new Date();
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - today.getDay());
   
-  // Se for domingo e já passou uma semana completa
+  
   if (today.getDay() === 0 && this.weeklyProgress.currentWeek < 12) {
     const lastWeekProgress = this.dailyProgress.filter(progress => {
       const progressDate = new Date(progress.date);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRooms } from '../../hooks/useRooms';
+import { useFriends } from '../../hooks/useFriends';
+
 import { 
   Container, 
   Main, 
@@ -17,13 +19,23 @@ import {
   ProgressCard,
   FeedbackSection,
   FeedbackCard,
+  ParticipantsSection,
+  ParticipantsHeader,
+  ParticipantsList,
+  ParticipantCard,
+  InviteSection,
+  InviteForm,
+  FriendsList,
+  FriendItem,
   EmptyState
 } from './style';
 
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { getRoom, addDailyGoals, completeGoal } = useRooms();
+  const { getRoom, addDailyGoals, completeGoal, inviteUser } = useRooms();
+  const { friends, fetchFriends } = useFriends();
+ 
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,10 +46,18 @@ const Room = () => {
   const [overallPercentage, setOverallPercentage] = useState(0);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [inviteMethod, setInviteMethod] = useState('friendCode'); // 'friendCode' ou 'friendsList'
+  const [inviteFriendCode, setInviteFriendCode] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     loadRoom();
   }, [roomId]);
+
+  useEffect(() => {
+    fetchFriends();
+  }, []);
 
   const loadRoom = async () => {
     try {
@@ -61,7 +81,7 @@ const Room = () => {
     const activeGoals = roomData.weeklyGoals?.filter(goal => goal.isActive) || [];
     setWeeklyGoals(activeGoals);
     
-    // Carregar progresso de hoje
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -81,7 +101,7 @@ const Room = () => {
     setOverallPercentage(roomData.weeklyProgress?.overallPercentage || 0);
     setCurrentWeek(roomData.weeklyProgress?.currentWeek || 1);
     
-    
+
     if ((today.getDay() === 0 || today.getDay() === 6) && overallPercentage > 0) {
       setShowFeedback(true);
     }
@@ -105,7 +125,7 @@ const Room = () => {
       const result = await addDailyGoals(roomId, validGoals);
       if (result.success) {
         setNewGoals(['', '', '', '', '']);
-        await loadRoom(); // Recarregar para mostrar as novas metas
+        await loadRoom(); 
       }
     } catch (err) {
       console.error('Erro ao definir metas semanais:', err);
@@ -116,10 +136,69 @@ const Room = () => {
     try {
       const result = await completeGoal(roomId, goalId, completed);
       if (result.success) {
-        await loadRoom(); // Recarregar para atualizar o progresso
+        await loadRoom(); 
       }
     } catch (err) {
       console.error('Erro ao atualizar progresso:', err);
+    }
+  };
+
+  const handleInviteUser = async (e) => {
+    e.preventDefault();
+    
+    let inviteData = {};
+    
+    if (inviteMethod === 'friendCode') {
+      if (!inviteFriendCode.trim()) {
+        alert('Digite o código do amigo!');
+        return;
+      }
+      inviteData = { friendCode: inviteFriendCode.trim() };
+    } else if (inviteMethod === 'friendsList') {
+      const selectedFriend = e.target.friendId?.value;
+      if (!selectedFriend) {
+        alert('Selecione um amigo da lista!');
+        return;
+      }
+      inviteData = { userId: selectedFriend };
+    }
+    
+    try {
+      setInviting(true);
+      const result = await inviteUser(roomId, inviteData);
+      
+      if (result.success) {
+        setInviteFriendCode('');
+        setShowInviteForm(false);
+        await loadRoom(); // Recarregar para mostrar o novo participante
+        alert('Usuário convidado com sucesso!');
+      } else {
+        alert(result.message || 'Erro ao convidar usuário');
+      }
+    } catch (err) {
+      alert('Erro interno ao convidar usuário');
+      console.error('Erro ao convidar usuário:', err);
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleInviteFriend = async (friendId) => {
+    try {
+      setInviting(true);
+      const result = await inviteUser(roomId, { userId: friendId });
+      
+      if (result.success) {
+        await loadRoom(); // Recarregar para mostrar o novo participante
+        alert('Amigo convidado com sucesso!');
+      } else {
+        alert(result.message || 'Erro ao convidar amigo');
+      }
+    } catch (err) {
+      alert('Erro interno ao convidar amigo');
+      console.error('Erro ao convidar amigo:', err);
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -158,13 +237,27 @@ const Room = () => {
     const today = new Date();
     const isWeekend = today.getDay() === 0 || today.getDay() === 6;
     
-    
+ 
     return !todayProgress && !isWeekend;
   };
 
   const handleFeedbackAction = () => {
     setShowFeedback(false);
     navigate('/my-rooms');
+  };
+
+  const getParticipantProgress = (participant) => {
+    if (!todayProgress || !weeklyGoals.length) return 0;
+    
+    const participantProgress = todayProgress.completedGoals?.filter(
+      gp => gp.completed && gp.userId === participant.user._id
+    ).length || 0;
+    
+    return (participantProgress / weeklyGoals.length) * 100;
+  };
+
+  const isFriendAlreadyInRoom = (friendId) => {
+    return room?.participants?.some(p => p.user._id === friendId);
   };
 
   if (loading) {
@@ -211,6 +304,7 @@ const Room = () => {
         </Header>
 
         <Content>
+          {/* Seção de Metas Semanais */}
           <GoalsSection>
             <GoalsHeader>
               <h2>Metas Semanais</h2>
@@ -265,7 +359,7 @@ const Room = () => {
               </GoalsForm>
             ) : (
               <GoalsList>
-                <h3>Suas metas desta semana:</h3>
+                <h3>Metas desta semana:</h3>
                 {weeklyGoals.map((goal, index) => {
                   const isCompleted = todayProgress?.completedGoals?.find(
                     gp => gp.goalId === goal._id
@@ -290,6 +384,7 @@ const Room = () => {
             )}
           </GoalsSection>
 
+          {/* Seção de Progresso */}
           <ProgressSection>
             <ProgressCard>
               <h3>Progresso de Hoje</h3>
@@ -316,6 +411,162 @@ const Room = () => {
             </ProgressCard>
           </ProgressSection>
 
+          {/* Seção de Participantes */}
+          <ParticipantsSection>
+            <ParticipantsHeader>
+              <h2>Participantes da Sala</h2>
+              <button 
+                className="invite-button"
+                onClick={() => setShowInviteForm(!showInviteForm)}
+              >
+                + Convidar Amigo
+              </button>
+            </ParticipantsHeader>
+
+            {showInviteForm && (
+              <InviteSection>
+                <div className="invite-tabs">
+                  <button 
+                    className={`tab ${inviteMethod === 'friendCode' ? 'active' : ''}`}
+                    onClick={() => setInviteMethod('friendCode')}
+                  >
+                    Por Código
+                  </button>
+                  <button 
+                    className={`tab ${inviteMethod === 'friendsList' ? 'active' : ''}`}
+                    onClick={() => setInviteMethod('friendsList')}
+                  >
+                    Da Lista de Amigos
+                  </button>
+                </div>
+
+                {inviteMethod === 'friendCode' ? (
+                  <InviteForm onSubmit={handleInviteUser}>
+                    <div className="form-group">
+                      <label htmlFor="friendCode">Código do Amigo:</label>
+                      <input
+                        id="friendCode"
+                        type="text"
+                        placeholder="Digite o código do amigo"
+                        value={inviteFriendCode}
+                        onChange={(e) => setInviteFriendCode(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="button-group">
+                      <button 
+                        type="button" 
+                        className="cancel-button"
+                        onClick={() => {
+                          setShowInviteForm(false);
+                          setInviteFriendCode('');
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="submit-button"
+                        disabled={inviting}
+                      >
+                        {inviting ? 'Convidando...' : 'Convidar'}
+                      </button>
+                    </div>
+                  </InviteForm>
+                ) : (
+                  <FriendsList>
+                    <h4>Seus amigos:</h4>
+                    {friends && friends.length > 0 ? (
+                      friends.map((friend) => (
+                        <FriendItem key={friend._id}>
+                          <div className="friend-info">
+                            <div className="avatar">
+                              {friend.profilePicture ? (
+                                <img 
+                                  src={friend.profilePicture} 
+                                  alt={friend.name}
+                                />
+                              ) : (
+                                <div className="initials">
+                                  {friend.name
+                                    .split(' ')
+                                    .map(word => word.charAt(0))
+                                    .join('')
+                                    .toUpperCase()
+                                    .slice(0, 2)
+                                  }
+                                </div>
+                              )}
+                            </div>
+                            <span className="name">{friend.name}</span>
+                          </div>
+                          <button
+                            className={`invite-friend-btn ${isFriendAlreadyInRoom(friend._id) ? 'already-in' : ''}`}
+                            onClick={() => handleInviteFriend(friend._id)}
+                            disabled={isFriendAlreadyInRoom(friend._id) || inviting}
+                          >
+                            {isFriendAlreadyInRoom(friend._id) 
+                              ? 'Já na sala' 
+                              : 'Convidar'
+                            }
+                          </button>
+                        </FriendItem>
+                      ))
+                    ) : (
+                      <p className="no-friends">Você ainda não tem amigos adicionados.</p>
+                    )}
+                  </FriendsList>
+                )}
+              </InviteSection>
+            )}
+
+            <ParticipantsList>
+              {room.participants?.map((participant) => (
+                <ParticipantCard key={participant.user._id}>
+                  <div className="participant-info">
+                    <div className="avatar">
+                      {participant.user.profilePicture ? (
+                        <img 
+                          src={participant.user.profilePicture} 
+                          alt={participant.user.name}
+                        />
+                      ) : (
+                        <div className="initials">
+                          {participant.user.name
+                            .split(' ')
+                            .map(word => word.charAt(0))
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)
+                          }
+                        </div>
+                      )}
+                    </div>
+                    <div className="details">
+                      <h4>{participant.user.name}</h4>
+                      <span className="role">{participant.role === 'admin' ? 'Administrador' : 'Membro'}</span>
+                    </div>
+                  </div>
+                  
+                  {weeklyGoals.length > 0 && (
+                    <div className="progress-info">
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{ width: `${getParticipantProgress(participant)}%` }}
+                        ></div>
+                      </div>
+                      <span className="progress-text">
+                        {Math.round(getParticipantProgress(participant))}%
+                      </span>
+                    </div>
+                  )}
+                </ParticipantCard>
+              ))}
+            </ParticipantsList>
+          </ParticipantsSection>
+
+          {/* Seção de Feedback */}
           {showFeedback && (
             <FeedbackSection>
               <FeedbackCard className={feedback.type}>

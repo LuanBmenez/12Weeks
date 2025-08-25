@@ -1,45 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRooms } from '../../hooks/useRooms';
-import RoomCard from '../RoomCard';
 import { 
   Container, 
   Header, 
   Title, 
   CreateButton, 
   RoomsGrid, 
-  EmptyState,
-  LoadingSpinner
+  EmptyState, 
+  LoadingSpinner,
+  ResponsiveContainer,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  CloseButton,
+  ModalBody,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  TextArea,
+  ButtonGroup,
+  CancelButton,
+  SubmitButton
 } from './style';
 
 const RoomsList = () => {
-  const { rooms, loading, error, fetchRooms, editRoom } = useRooms();
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const navigate = useNavigate();
+  const { rooms, loading, error, fetchRooms, createRoom } = useRooms();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: ''
+  });
+  const [creating, setCreating] = useState(false);
 
-  const handleRoomClick = (room) => {
-    setSelectedRoom(room);
-  };
-
-  const handleCloseRoomCard = () => {
-    setSelectedRoom(null);
-  };
-
-  const handleEditRoom = async (roomId, updates) => {
-    try {
-      const result = await editRoom(roomId, updates);
-      if (result.success) {
-        // A sala já foi atualizada no estado local pelo hook
-        console.log('Sala editada com sucesso');
-      }
-    } catch (error) {
-      console.error('Erro ao editar sala:', error);
-    }
-  };
+  useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
 
   const handleCreateRoom = () => {
     setShowCreateModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowCreateModal(false);
+    setFormData({ name: '', description: '' });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.description.trim()) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      
+      const result = await createRoom(formData);
+      
+      if (result.success) {
+        handleCloseModal();
+
+        navigate(`/room/${result.room._id}`);
+      } else {
+        alert(result.message || 'Erro ao criar sala');
+      }
+    } catch (err) {
+      alert('Erro interno ao criar sala');
+      console.error('Erro ao criar sala:', err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleRoomClick = (room) => {
+    
+    navigate(`/room/${room._id}`);
   };
 
   const handleEnterRoom = (roomId) => {
@@ -48,30 +96,50 @@ const RoomsList = () => {
 
   if (loading) {
     return (
-      <Container>
-        <LoadingSpinner>
-          <div className="spinner"></div>
-          <p>Carregando suas salas...</p>
-        </LoadingSpinner>
-      </Container>
+      <ResponsiveContainer>
+        <LoadingSpinner />
+      </ResponsiveContainer>
     );
   }
 
   if (error) {
     return (
-      <Container>
-        <div className="error">
+      <ResponsiveContainer>
+        <div style={{ textAlign: 'center', color: 'red' }}>
           <p>Erro ao carregar salas: {error}</p>
           <button onClick={fetchRooms}>Tentar novamente</button>
         </div>
-      </Container>
+      </ResponsiveContainer>
     );
   }
 
   return (
     <Container>
       <Header>
-        <Title>Minhas Salas</Title>
+        <button 
+          onClick={() => navigate('/dashboard')}
+          style={{
+            background: '#6b7280',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: '500',
+            transition: 'background-color 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+          onMouseOver={(e) => e.target.style.background = '#4b5563'}
+          onMouseOut={(e) => e.target.style.background = '#6b7280'}
+        >
+          ← Voltar ao Dashboard
+        </button>
+        
+        <Title style={{ flex: 1, textAlign: 'center' }}>Minhas Salas</Title>
+        
         <CreateButton onClick={handleCreateRoom}>
           + Criar Nova Sala
         </CreateButton>
@@ -89,65 +157,20 @@ const RoomsList = () => {
       ) : (
         <RoomsGrid>
           {rooms.map((room) => (
-            <div 
-              key={room._id} 
-              className="room-card"
-              onClick={() => handleRoomClick(room)}
-            >
-              <div className="room-avatar">
-                {room.participants && room.participants.length > 0 ? (
-                  <div className="participants-preview">
-                    {room.participants.slice(0, 3).map((participant, index) => (
-                      <div 
-                        key={participant.user._id} 
-                        className={`participant ${index > 0 ? 'overlap' : ''}`}
-                        style={{ 
-                          left: `${index * 15}px`,
-                          zIndex: 3 - index
-                        }}
-                      >
-                        {participant.user.profilePicture ? (
-                          <img 
-                            src={participant.user.profilePicture} 
-                            alt={participant.user.name}
-                          />
-                        ) : (
-                          <div className="initials">
-                            {participant.user.name
-                              .split(' ')
-                              .map(word => word.charAt(0))
-                              .join('')
-                              .toUpperCase()
-                              .slice(0, 2)
-                            }
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="default-avatar">👥</div>
-                )}
+            <div key={room._id} className="room-card" onClick={() => handleRoomClick(room)}>
+              <div className="room-header">
+                <h3>{room.name}</h3>
+                <span className="participant-count">
+                  {room.participants?.length || 0} participantes
+                </span>
               </div>
-              
-              <div className="room-info">
-                <h3 className="room-name">{room.name}</h3>
-                <p className="room-description">
-                  {room.description || 'Sem descrição'}
-                </p>
-                <div className="room-meta">
-                  <span className="member-count">
-                    {room.participants?.length || 0} membros
-                  </span>
-                  <span className="room-date">
-                    {new Date(room.createdAt).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              </div>
-
-              <div className="room-actions">
+              <p className="room-description">{room.description}</p>
+              <div className="room-footer">
+                <span className="creation-date">
+                  {new Date(room.createdAt).toLocaleDateString('pt-BR')}
+                </span>
                 <button 
-                  className="enter-room"
+                  className="enter-button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEnterRoom(room._id);
@@ -161,25 +184,60 @@ const RoomsList = () => {
         </RoomsGrid>
       )}
 
-      {selectedRoom && (
-        <RoomCard
-          room={selectedRoom}
-          onClose={handleCloseRoomCard}
-          onEdit={handleEditRoom}
-        />
-      )}
-
-      {/* Modal de criação de sala seria implementado aqui */}
+      {/* Modal de Criação de Sala */}
       {showCreateModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Criar Nova Sala</h3>
-            <p>Funcionalidade em desenvolvimento...</p>
-            <button onClick={() => setShowCreateModal(false)}>
-              Fechar
-            </button>
-          </div>
-        </div>
+        <Modal>
+          <ModalContent>
+            <ModalHeader>
+              <ModalTitle>Criar Nova Sala</ModalTitle>
+              <CloseButton onClick={handleCloseModal}>×</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <Form onSubmit={handleSubmit}>
+                <FormGroup>
+                  <Label htmlFor="name">
+                    Nome da Sala *
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Ex: Metas da Semana"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    maxLength={100}
+                    required
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label htmlFor="description">
+                    Descrição *
+                  </Label>
+                  <TextArea
+                    id="description"
+                    name="description"
+                    placeholder="Descreva o objetivo desta sala..."
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    maxLength={500}
+                    rows={4}
+                    required
+                  />
+                </FormGroup>
+
+                <ButtonGroup>
+                  <CancelButton type="button" onClick={handleCloseModal}>
+                    Cancelar
+                  </CancelButton>
+                  <SubmitButton type="submit" disabled={creating}>
+                    {creating ? 'Criando...' : 'Criar Sala'}
+                  </SubmitButton>
+                </ButtonGroup>
+              </Form>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
       )}
     </Container>
   );

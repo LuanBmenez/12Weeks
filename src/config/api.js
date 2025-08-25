@@ -32,7 +32,7 @@ const API_CONFIG = {
   }
 };
 
-// Criar instância do Axios
+
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: 10000,
@@ -41,7 +41,7 @@ const api = axios.create({
   }
 });
 
-// Interceptor para adicionar token automaticamente
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -55,7 +55,7 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para tratamento de erros
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -68,7 +68,7 @@ api.interceptors.response.use(
   }
 );
 
-// Funções de API para Friends
+
 export const friendsAPI = {
   searchByCode: (friendCode) => 
     api.get(`${API_CONFIG.ENDPOINTS.FRIENDS.SEARCH}/${friendCode}`),
@@ -101,7 +101,7 @@ export const friendsAPI = {
     api.get(API_CONFIG.ENDPOINTS.FRIENDS.NOTIFICATIONS_UNREAD_COUNT),
 };
 
-// Funções de API para Autenticação
+
 export const authAPI = {
   register: (userData) => 
     api.post(API_CONFIG.ENDPOINTS.AUTH.REGISTER, userData),
@@ -116,7 +116,7 @@ export const authAPI = {
     api.get(API_CONFIG.ENDPOINTS.AUTH.ME),
 };
 
-// Funções de API para Rooms
+
 export const roomsAPI = {
   createRoom: (roomData) => 
     api.post(API_CONFIG.ENDPOINTS.ROOMS.CREATE, roomData),
@@ -136,8 +136,8 @@ export const roomsAPI = {
   updateDailyProgress: (roomId, goalId, completed) => 
     api.put(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/daily-progress/${goalId}`, { completed }),
   
-  inviteUser: (roomId, friendCode) => 
-    api.post(`${API_CONFIG.ENDPOINTS.ROOMS.INVITE_USER}/${roomId}/invite`, { friendCode })
+  inviteUser: (roomId, data) => 
+    api.post(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/invite`, data),
 };
 
 export default api;

@@ -52,7 +52,7 @@ router.post('/register', registerValidation, async (req, res) => {
       return res.status(400).json({ message: 'Email já cadastrado' });
     }
 
-    // Criar novo usuário
+   
     const user = new User({ name, email, password });
     await user.save();
 

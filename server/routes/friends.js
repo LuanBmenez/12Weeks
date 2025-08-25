@@ -44,7 +44,7 @@ router.get('/search/:friendCode', auth, async (req, res) => {
 });
 
 
-// Enviar solicitação de amizade
+
 router.post('/request', auth, [
   body('friendCode')
     .isLength({ min: 8, max: 8 })
@@ -121,7 +121,7 @@ router.post('/request', auth, [
   }
 });
 
-// Responder a uma solicitação de amizade
+
 router.post('/respond', auth, [
   body('fromUserId').isMongoId().withMessage('ID de usuário inválido'),
   body('action').isIn(['accept', 'reject']).withMessage('Ação deve ser accept ou reject')
@@ -228,7 +228,7 @@ router.get('/list', auth, async (req, res) => {
 });
 
   
-// Obter código de amigo do usuário atual
+
 router.get('/my-code', auth, async (req, res) => {
   try {
     res.json({ friendCode: req.user.friendCode });
@@ -238,7 +238,7 @@ router.get('/my-code', auth, async (req, res) => {
   }
 });
 
-// Obter notificações do usuário
+
 router.get('/notifications', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id)

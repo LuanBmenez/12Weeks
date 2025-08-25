@@ -158,6 +158,32 @@ export const useRooms = () => {
     }
   }, []);
 
+  const inviteUser = useCallback(async (roomId, data) => {
+    try {
+      setError(null);
+      
+      const response = await roomsAPI.inviteUser(roomId, data);
+      
+      if (response.data.success) {
+        // Atualizar a sala local
+        setRooms(prevRooms => 
+          prevRooms.map(room => 
+            room._id === roomId 
+              ? { ...room, participants: response.data.room.participants }
+              : room
+          )
+        );
+        
+        return { success: true, message: response.data.message };
+      } else {
+        return { success: false, message: response.data.message };
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Erro ao convidar usuário';
+      return { success: false, message: errorMessage };
+    }
+  }, []);
+
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
@@ -171,7 +197,8 @@ export const useRooms = () => {
     addDailyGoals,
     completeGoal,
     editRoom,
-    getRoom
+    getRoom,
+    inviteUser
   };
 };
 
