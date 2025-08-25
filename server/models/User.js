@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Email inválido']
   },
+  profilePicture: {
+    type: String,
+    default: null,
+    trim: true
+  },
   password: {
     type: String,
     required: [true, 'Senha é obrigatória'],

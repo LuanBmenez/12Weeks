@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_CONFIG = {
+const API_CONFIG = {
   BASE_URL: 'http://localhost:3001/api',
   ENDPOINTS: {
     AUTH: {
@@ -10,31 +10,38 @@ export const API_CONFIG = {
       LOGOUT: '/auth/logout'
     },
     FRIENDS: {
-      MY_CODE: '/friends/my-code',
       SEARCH: '/friends/search',
       REQUEST: '/friends/request',
       RESPOND: '/friends/respond',
       REQUESTS: '/friends/requests',
       LIST: '/friends/list',
-      REMOVE_FRIEND: '/friends/remove',
+      MY_CODE: '/friends/my-code',
       NOTIFICATIONS: '/friends/notifications',
-      NOTIFICATION_READ: '/friends/notifications',
+      MARK_READ: '/friends/notifications',
       NOTIFICATIONS_READ_ALL: '/friends/notifications/read-all',
       NOTIFICATIONS_UNREAD_COUNT: '/friends/notifications/unread-count'
+    },
+    ROOMS: {
+      CREATE: '/rooms/create',
+      MY_ROOMS: '/rooms/my-rooms',
+      GET_ROOM: '/rooms',
+      ADD_GOALS: '/rooms',
+      COMPLETE_GOAL: '/rooms',
+      INVITE_USER: '/rooms'
     }
   }
 };
 
-// Criar instância do axios com configurações padrão
+// Criar instância do Axios
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10 segundos de timeout
+    'Content-Type': 'application/json'
+  }
 });
 
-// Interceptor para adicionar token de autenticação automaticamente
+// Interceptor para adicionar token automaticamente
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -48,77 +55,44 @@ api.interceptors.request.use(
   }
 );
 
-
+// Interceptor para tratamento de erros
 api.interceptors.response.use(
-  (response) => {
-    console.log('Resposta da API:', response);
-    
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('Erro na API:', error);
-
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
-    
-
-    console.error('Erro na API:', error.response?.data || error.message);
-    
     return Promise.reject(error);
   }
 );
 
-
-export const authAPI = {
-  register: (userData) => 
-    api.post(API_CONFIG.ENDPOINTS.AUTH.REGISTER, userData),
-  
-  login: (credentials) => 
-    api.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, credentials),
-  
-  getProfile: () => 
-    api.get(API_CONFIG.ENDPOINTS.AUTH.ME),
-  
-  logout: () => 
-    api.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT),
-};
-
-
-// API para amizades
+// Funções de API para Friends
 export const friendsAPI = {
-  getMyCode: () => 
-    api.get(API_CONFIG.ENDPOINTS.FRIENDS.MY_CODE),
-  
-  searchUser: (friendCode) => 
+  searchByCode: (friendCode) => 
     api.get(`${API_CONFIG.ENDPOINTS.FRIENDS.SEARCH}/${friendCode}`),
   
   sendRequest: (friendCode) => 
     api.post(API_CONFIG.ENDPOINTS.FRIENDS.REQUEST, { friendCode }),
   
-  respondToRequest: (fromUserId, action) => 
-    api.post(API_CONFIG.ENDPOINTS.FRIENDS.RESPOND, { fromUserId, action }),
+  respondToRequest: (fromUserId, status) => 
+    api.post(API_CONFIG.ENDPOINTS.FRIENDS.RESPOND, { fromUserId, status }),
   
   getRequests: () => 
     api.get(API_CONFIG.ENDPOINTS.FRIENDS.REQUESTS),
   
-  getFriends: () => 
+  getFriendsList: () => 
     api.get(API_CONFIG.ENDPOINTS.FRIENDS.LIST),
   
-  // Remover amigo
-  removeFriend: (friendId) => 
-    api.delete(`${API_CONFIG.ENDPOINTS.FRIENDS.REMOVE_FRIEND}/${friendId}`),
+  getMyCode: () => 
+    api.get(API_CONFIG.ENDPOINTS.FRIENDS.MY_CODE),
   
-  // Novas funções para notificações
   getNotifications: () => 
     api.get(API_CONFIG.ENDPOINTS.FRIENDS.NOTIFICATIONS),
   
   markNotificationAsRead: (notificationId) => 
-    api.put(`${API_CONFIG.ENDPOINTS.FRIENDS.NOTIFICATION_READ}/${notificationId}/read`),
+    api.put(`${API_CONFIG.ENDPOINTS.FRIENDS.MARK_READ}/${notificationId}/read`),
   
   markAllNotificationsAsRead: () => 
     api.put(API_CONFIG.ENDPOINTS.FRIENDS.NOTIFICATIONS_READ_ALL),
@@ -127,5 +101,43 @@ export const friendsAPI = {
     api.get(API_CONFIG.ENDPOINTS.FRIENDS.NOTIFICATIONS_UNREAD_COUNT),
 };
 
+// Funções de API para Autenticação
+export const authAPI = {
+  register: (userData) => 
+    api.post(API_CONFIG.ENDPOINTS.AUTH.REGISTER, userData),
+  
+  login: (credentials) => 
+    api.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, credentials),
+  
+  logout: () => 
+    api.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT),
+  
+  getProfile: () => 
+    api.get(API_CONFIG.ENDPOINTS.AUTH.ME),
+};
+
+// Funções de API para Rooms
+export const roomsAPI = {
+  createRoom: (roomData) => 
+    api.post(API_CONFIG.ENDPOINTS.ROOMS.CREATE, roomData),
+  
+  getMyRooms: () => 
+    api.get(API_CONFIG.ENDPOINTS.ROOMS.MY_ROOMS),
+  
+  getRoom: (roomId) => 
+    api.get(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}`),
+  
+  editRoom: (roomId, updates) => 
+    api.put(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}`, updates),
+  
+  setWeeklyGoals: (roomId, goals) => 
+    api.post(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/weekly-goals`, { goals }),
+  
+  updateDailyProgress: (roomId, goalId, completed) => 
+    api.put(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/daily-progress/${goalId}`, { completed }),
+  
+  inviteUser: (roomId, friendCode) => 
+    api.post(`${API_CONFIG.ENDPOINTS.ROOMS.INVITE_USER}/${roomId}/invite`, { friendCode })
+};
 
 export default api;

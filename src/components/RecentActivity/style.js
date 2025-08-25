@@ -92,17 +92,32 @@ export const RoomDetail = styled.span`
 
 export const EnterButton = styled.button`
   padding: 0.5rem 1rem;
-  color: #2563eb;
-  background: #f0f9ff;
-  border-radius: 0.5rem;
-  font-weight: 500;
+  background-color: #3b82f6;
+  color: white;
   border: none;
-  transition: background 0.2s, color 0.2s;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  
-  &:hover { 
-    background: #dbeafe; 
-    color: #1d4ed8; 
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #2563eb;
   }
+`;
+
+export const LoadingText = styled.p`
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+  padding: 2rem;
+`;
+
+export const EmptyText = styled.p`
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+  padding: 2rem;
+  font-style: italic;
 `;
 

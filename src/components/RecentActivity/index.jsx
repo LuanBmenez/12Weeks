@@ -1,9 +1,6 @@
 import { Users, Clock } from "lucide-react";
 import {
   RecentActivityCard,
-  RecentHeader,
-  RecentTitle,
-  RecentButton,
   RecentList,
   RecentItem,
   RecentItemInner,
@@ -13,28 +10,32 @@ import {
   RoomDetails,
   RoomDetail,
   EnterButton,
+  LoadingText,
+  EmptyText,
 } from "./style";
 
-export default function RecentActivity() {
-  const recentRooms = [
-    {
-      id: 1,
-      name: "Primeiras metas",
-      participants: 8,
-      lastActivity: "2 min atrás",
-    },
-   
-  ];
+export default function RecentActivity({ rooms = [], loading = false }) {
+  if (loading) {
+    return (
+      <RecentActivityCard>
+        <LoadingText>Carregando salas...</LoadingText>
+      </RecentActivityCard>
+    );
+  }
+
+  if (!rooms || rooms.length === 0) {
+    return (
+      <RecentActivityCard>
+        <EmptyText>Nenhuma sala encontrada. Crie sua primeira sala!</EmptyText>
+      </RecentActivityCard>
+    );
+  }
 
   return (
     <RecentActivityCard>
-      <RecentHeader>
-        <RecentTitle>Suas Salas</RecentTitle>
-        <RecentButton>Ver todas</RecentButton>
-      </RecentHeader>
       <RecentList>
-        {recentRooms.map((room) => (
-          <RecentItem key={room.id}>
+        {rooms.map((room) => (
+          <RecentItem key={room._id}>
             <RecentItemInner>
               <RecentRoomInfo>
                 <RoomIcon>
@@ -45,11 +46,11 @@ export default function RecentActivity() {
                   <RoomDetails>
                     <RoomDetail>
                       <Users size={16} />
-                      {room.participants} participantes
+                      {room.participants.length} participantes
                     </RoomDetail>
                     <RoomDetail>
                       <Clock size={16} />
-                      {room.lastActivity}
+                      {room.updatedAt ? new Date(room.updatedAt).toLocaleDateString('pt-BR') : 'Recente'}
                     </RoomDetail>
                   </RoomDetails>
                 </div>
