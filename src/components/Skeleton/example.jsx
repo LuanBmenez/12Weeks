@@ -16,7 +16,7 @@ import Skeleton, {
   SkeletonColumn
 } from './index';
 
-// Exemplo de componente que usa o Skeleton
+
 export const SkeletonExample = () => {
   const [loading, setLoading] = useState(true);
   const [variant, setVariant] = useState('default');
@@ -24,7 +24,7 @@ export const SkeletonExample = () => {
   const [rounded, setRounded] = useState(false);
 
   useEffect(() => {
-    // Simular carregamento
+   
     const timer = setTimeout(() => {
       setLoading(false);
     }, 5000);

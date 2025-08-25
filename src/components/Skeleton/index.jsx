@@ -136,10 +136,8 @@ const Skeleton = memo(({
   );
 });
 
-// Componentes específicos para diferentes tipos de conteúdo
+
 export const CardSkeleton = memo(({ 
-  width = '100%', 
-  height = '200px', 
   showHeader = true,
   showContent = true,
   showFooter = true,
@@ -519,7 +517,7 @@ export const DashboardSkeleton = memo(({
   </div>
 ));
 
-// Componentes específicos para a aplicação
+
 export const GoalsSkeleton = memo(({ 
   variant = 'default',
   animated = true,

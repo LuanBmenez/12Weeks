@@ -127,7 +127,7 @@ export const ToastProvider = ({ children, maxToasts = 5, position = 'top-right' 
     
     setToasts(prev => {
       const updated = [...prev, newToast];
-      // Limitar o número máximo de toasts
+      
       if (updated.length > maxToasts) {
         return updated.slice(-maxToasts);
       }

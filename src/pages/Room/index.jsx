@@ -47,7 +47,7 @@ const Room = () => {
   const [currentWeek, setCurrentWeek] = useState(1);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const [inviteMethod, setInviteMethod] = useState('friendCode'); // 'friendCode' ou 'friendsList'
+  const [inviteMethod, setInviteMethod] = useState('friendCode'); 
   const [inviteFriendCode, setInviteFriendCode] = useState('');
   const [inviting, setInviting] = useState(false);
 
@@ -170,7 +170,7 @@ const Room = () => {
       if (result.success) {
         setInviteFriendCode('');
         setShowInviteForm(false);
-        await loadRoom(); // Recarregar para mostrar o novo participante
+        await loadRoom(); 
         alert('Usuário convidado com sucesso!');
       } else {
         alert(result.message || 'Erro ao convidar usuário');
@@ -189,7 +189,7 @@ const Room = () => {
       const result = await inviteUser(roomId, { userId: friendId });
       
       if (result.success) {
-        await loadRoom(); // Recarregar para mostrar o novo participante
+        await loadRoom(); 
         alert('Amigo convidado com sucesso!');
       } else {
         alert(result.message || 'Erro ao convidar amigo');

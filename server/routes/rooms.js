@@ -315,7 +315,7 @@ router.put('/:roomId', auth, async (req, res) => {
 });
 
 
-// Convidar usuário para sala
+
 router.post('/:roomId/invite', auth, async (req, res) => {
   try {
     const { friendCode, userId } = req.body;
@@ -328,7 +328,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
-    // Verificar se usuário é participante
+   
     const isParticipant = room.participants.some(
       p => p.user.toString() === req.user._id.toString()
     );
@@ -342,7 +342,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     
     let invitedUser;
     
-    // Buscar usuário pelo friendCode ou userId
+    
     if (friendCode) {
       invitedUser = await User.findOne({ friendCode });
     } else if (userId) {
@@ -361,7 +361,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
-    // Verificar se já é participante
+    
     const alreadyParticipant = room.participants.some(
       p => p.user.toString() === invitedUser._id.toString()
     );
@@ -373,7 +373,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
-    // Adicionar usuário como participante
+    
     room.participants.push({
       user: invitedUser._id,
       role: 'member'
@@ -381,7 +381,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     
     await room.save();
     
-    // Populate para retornar dados atualizados
+    
     await room.populate('participants.user', 'name email profilePicture');
     
     res.json({

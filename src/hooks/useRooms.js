@@ -165,7 +165,7 @@ export const useRooms = () => {
       const response = await roomsAPI.inviteUser(roomId, data);
       
       if (response.data.success) {
-        // Atualizar a sala local
+        
         setRooms(prevRooms => 
           prevRooms.map(room => 
             room._id === roomId 

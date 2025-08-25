@@ -221,7 +221,7 @@ export const SkeletonItem = styled.div`
   }
 `;
 
-// Componentes específicos com estilos customizados
+
 export const SkeletonText = styled(SkeletonItem)`
   height: 1em;
   line-height: 1;
@@ -311,7 +311,7 @@ export const SkeletonSpacer = styled.div`
   width: 100%;
 `;
 
-// Utilitários para layouts
+
 export const SkeletonRow = styled.div`
   display: flex;
   align-items: center;

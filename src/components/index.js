@@ -1,7 +1,7 @@
-// Toast
+
 export { default as Toast, ToastProvider, useToast } from './Toast';
 
-// Skeleton
+
 export { 
   default as Skeleton,
   CardSkeleton,
@@ -29,7 +29,7 @@ export {
   SkeletonFlexbox
 } from './Skeleton';
 
-// Componentes principais da aplicação
+
 export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as DashboardHeader } from './DashboardHeader';
 export { default as RoomCard } from './RoomCard';

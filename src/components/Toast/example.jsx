@@ -1,7 +1,7 @@
 import React from 'react';
 import { useToast } from './index';
 
-// Exemplo de componente que usa o Toast
+
 export const ToastExample = () => {
   const { 
     showSuccess, 

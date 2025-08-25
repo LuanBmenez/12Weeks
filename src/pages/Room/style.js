@@ -559,7 +559,7 @@ export const ParticipantCard = styled.div`
   }
 `;
 
-// Lista de Amigos
+
 export const FriendsList = styled.div`
   h4 {
     margin: 0 0 1rem 0;
