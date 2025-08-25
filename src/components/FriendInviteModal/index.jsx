@@ -31,14 +31,15 @@ import {
   FriendInfo,
   RemoveButton,
   EmptyState,
-  ErrorMessage,
-  LoadingSpinner
+  LoadingSpinner,
+  NotificationMessage
 } from './style';
 
 export default function FriendInviteModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('search');
   const [searchCode, setSearchCode] = useState('');
   const [copyMessage, setCopyMessage] = useState('');
+  const [notification, setNotification] = useState({ message: '', type: '', show: false });
   
   const {
     friendCode,
@@ -46,7 +47,6 @@ export default function FriendInviteModal({ isOpen, onClose }) {
     friendRequests,
     friends,
     loading,
-    error,
     searchUserByCode,
     sendFriendRequest,
     respondToRequest,
@@ -54,6 +54,11 @@ export default function FriendInviteModal({ isOpen, onClose }) {
     clearSearch,
     removeFriend
   } = useFriends();
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type, show: true });
+    setTimeout(() => setNotification({ message: '', type: '', show: false }), 3000);
+  };
 
   const handleSearch = () => {
     if (searchCode.trim()) {
@@ -64,11 +69,11 @@ export default function FriendInviteModal({ isOpen, onClose }) {
   const handleSendRequest = async (code) => {
     const result = await sendFriendRequest(code);
     if (result.success) {
-      alert(result.message);
+      showNotification(result.message, 'success');
       setSearchCode('');
       clearSearch();
     } else {
-      alert(result.message);
+      showNotification(result.message, 'error');
     }
   };
 
@@ -80,17 +85,15 @@ export default function FriendInviteModal({ isOpen, onClose }) {
 
   const handleRespondToRequest = async (fromUserId, action) => {
     const result = await respondToRequest(fromUserId, action);
-    alert(result.message);
+    showNotification(result.message, result.success ? 'success' : 'error');
   };
 
-  const handleRemoveFriend = async (friendId, friendName) => {
-    if (window.confirm(`Tem certeza que deseja remover ${friendName} da sua lista de amigos?`)) {
-      const result = await removeFriend(friendId);
-      if (result.success) {
-        alert(result.message);
-      } else {
-        alert(result.message);
-      }
+  const handleRemoveFriend = async (friendId) => {
+    const result = await removeFriend(friendId);
+    if (result.success) {
+      showNotification(result.message, 'success');
+    } else {
+      showNotification(result.message, 'error');
     }
   };
 
@@ -105,6 +108,13 @@ export default function FriendInviteModal({ isOpen, onClose }) {
             <X size={20} />
           </button>
         </ModalHeader>
+
+        {/* Notificação visual */}
+        {notification.show && (
+          <NotificationMessage type={notification.type}>
+            {notification.message}
+          </NotificationMessage>
+        )}
 
         <ModalTabs>
           <TabButton 
@@ -156,8 +166,6 @@ export default function FriendInviteModal({ isOpen, onClose }) {
                 {loading ? <LoadingSpinner /> : <Search size={16} />}
                 Buscar
               </SearchButton>
-
-              {error && <ErrorMessage>{error}</ErrorMessage>}
 
               {searchResult && (
                 <UserResult>
@@ -272,7 +280,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
                       <UserCode>Código: {friend.friendCode}</UserCode>
                     </FriendInfo>
                     <RemoveButton 
-                      onClick={() => handleRemoveFriend(friend._id, friend.name)}
+                      onClick={() => handleRemoveFriend(friend._id)}
                     >
                       <Trash2 size={16} />
                       Remover Amigo

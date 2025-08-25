@@ -62,23 +62,23 @@ router.post('/request', auth, [
     const { friendCode } = req.body;
     const currentUserId = req.user._id;
 
-    // Verificar se não está tentando se adicionar
+        
     if (req.user.friendCode === friendCode.toUpperCase()) {
       return res.status(400).json({ message: 'Você não pode se adicionar como amigo' });
     }
 
-    // Buscar usuário alvo
+    
     const targetUser = await User.findOne({ friendCode: friendCode.toUpperCase() });
     if (!targetUser) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    // Verificar se já são amigos
+    
     if (req.user.friends.includes(targetUser._id)) {
       return res.status(400).json({ message: 'Vocês já são amigos' });
     }
 
-    // Verificar se já existe uma solicitação
+    
     const existingRequest = req.user.friendRequests.find(
       request => request.from.toString() === targetUser._id.toString()
     );
@@ -87,7 +87,7 @@ router.post('/request', auth, [
       return res.status(400).json({ message: 'Já existe uma solicitação pendente' });
     }
 
-    // Adicionar solicitação para o usuário atual
+    
     await User.findByIdAndUpdate(currentUserId, {
       $push: {
         friendRequests: {
@@ -97,7 +97,7 @@ router.post('/request', auth, [
       }
     });
 
-    // Adicionar solicitação para o usuário alvo
+    
     await User.findByIdAndUpdate(targetUser._id, {
       $push: {
         friendRequests: {
@@ -138,7 +138,7 @@ router.post('/respond', auth, [
     const { fromUserId, action } = req.body;
     const currentUserId = req.user._id;
 
-    // Atualizar status da solicitação para o usuário atual
+    
     await User.findByIdAndUpdate(currentUserId, {
       $set: {
         'friendRequests.$[elem].status': action === 'accept' ? 'accepted' : 'rejected'
@@ -147,7 +147,7 @@ router.post('/respond', auth, [
       arrayFilters: [{ 'elem.from': fromUserId }]
     });
 
-    // Atualizar status da solicitação para o usuário que enviou
+    
     await User.findByIdAndUpdate(fromUserId, {
       $set: {
         'friendRequests.$[elem].status': action === 'accept' ? 'accepted' : 'rejected'
@@ -156,7 +156,7 @@ router.post('/respond', auth, [
       arrayFilters: [{ 'elem.from': currentUserId }]
     });
 
-    // Criar notificação para o usuário que enviou a solicitação
+    
     const notificationMessage = action === 'accept' 
       ? `${req.user.name} aceitou sua solicitação de amizade`
       : `${req.user.name} rejeitou sua solicitação de amizade`;
@@ -173,7 +173,7 @@ router.post('/respond', auth, [
     });
 
     if (action === 'accept') {
-      // Adicionar como amigos mutuamente
+      
       await User.findByIdAndUpdate(currentUserId, {
         $addToSet: { friends: fromUserId }
       });
@@ -245,7 +245,7 @@ router.get('/notifications', auth, async (req, res) => {
       .populate('notifications.from', 'name')
       .lean();
 
-    // Ordenar por data de criação (mais recentes primeiro)
+    
     const notifications = user.notifications.sort((a, b) => 
       new Date(b.createdAt) - new Date(a.createdAt)
     );
@@ -257,7 +257,7 @@ router.get('/notifications', auth, async (req, res) => {
   }
 });
 
-// Marcar notificação como lida
+
 router.put('/notifications/:notificationId/read', auth, async (req, res) => {
   try {
     const { notificationId } = req.params;
@@ -277,7 +277,7 @@ router.put('/notifications/:notificationId/read', auth, async (req, res) => {
   }
 });
 
-// Marcar todas as notificações como lidas
+
 router.put('/notifications/read-all', auth, async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user._id, {
@@ -293,7 +293,7 @@ router.put('/notifications/read-all', auth, async (req, res) => {
   }
 });
 
-// Obter contagem de notificações não lidas
+
 router.get('/notifications/unread-count', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).lean();
@@ -306,29 +306,29 @@ router.get('/notifications/unread-count', auth, async (req, res) => {
   }
 });
 
-// Remover amigo
+
 router.delete('/remove/:friendId', auth, async (req, res) => {
   try {
     const { friendId } = req.params;
     const currentUserId = req.user._id;
 
-    // Verificar se realmente são amigos
+
     const currentUser = await User.findById(currentUserId);
     if (!currentUser.friends.includes(friendId)) {
       return res.status(400).json({ message: 'Usuário não é seu amigo' });
     }
 
-    // Remover da lista de amigos do usuário atual
+
     await User.findByIdAndUpdate(currentUserId, {
       $pull: { friends: friendId }
     });
 
-    // Remover da lista de amigos do outro usuário
+
     await User.findByIdAndUpdate(friendId, {
       $pull: { friends: currentUserId }
     });
 
-    // Criar notificação para o amigo removido
+
     await User.findByIdAndUpdate(friendId, {
       $push: {
         notifications: {

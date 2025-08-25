@@ -1,5 +1,4 @@
 import { Users } from "lucide-react";
-import SearchBar from "../SearchBar";
 import UserActions from "../UserActions";
 import {
   Header,
@@ -19,8 +18,6 @@ export default function DashboardHeader({ onLogout }) {
           </LogoIcon>
           <Title>12Weeks</Title>
         </LogoBox>
-        
-        <SearchBar />
         
         <UserActions onLogout={onLogout} />
       </HeaderInner>

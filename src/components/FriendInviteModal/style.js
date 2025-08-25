@@ -387,21 +387,35 @@ export const EmptyState = styled.div`
   }
 `;
 
-export const ErrorMessage = styled.div`
-  padding: 12px 16px;
-  background-color: #fef2f2;
-  color: #dc2626;
-  border-radius: 8px;
-  font-size: 14px;
-  margin-bottom: 16px;
-  border: 1px solid #fecaca;
-`;
-
 export const LoadingSpinner = styled.div`
   width: 16px;
   height: 16px;
-  border: 2px solid #ffffff;
-  border-top: 2px solid transparent;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
+`;
+
+export const NotificationMessage = styled.div`
+  padding: 12px 16px;
+  margin: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  background-color: ${props => props.type === 'success' ? '#dcfce7' : '#fef2f2'};
+  color: ${props => props.type === 'success' ? '#16a34a' : '#dc2626'};
+  border: 1px solid ${props => props.type === 'success' ? '#bbf7d0' : '#fecaca'};
+  animation: slideIn 0.3s ease-out;
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
