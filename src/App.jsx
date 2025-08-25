@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ToastProvider } from './components/Toast';
 import LoginScreen from './pages/LoginScreen';
 import RegisterScreen from './pages/RegisterScreen';
 import Dashboard from './pages/Dashboard';
@@ -11,35 +12,37 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/login" element={<LoginScreen />} />
-          <Route path="/register" element={<RegisterScreen />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-rooms" 
-            element={
-              <ProtectedRoute>
-                <MyRooms />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/room/:roomId" 
-            element={
-              <ProtectedRoute>
-                <Room />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+        <ToastProvider maxToasts={5} position="top-right">
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/login" element={<LoginScreen />} />
+            <Route path="/register" element={<RegisterScreen />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-rooms" 
+              element={
+                <ProtectedRoute>
+                  <MyRooms />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/room/:roomId" 
+              element={
+                <ProtectedRoute>
+                  <Room />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );
