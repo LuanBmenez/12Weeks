@@ -17,8 +17,8 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
-        ...globals.node, // Adiciona globais do Node.js
-        process: 'readonly', // Define process como global
+        ...globals.node, 
+        process: 'readonly', 
       },
       parserOptions: {
         ecmaVersion: 'latest',

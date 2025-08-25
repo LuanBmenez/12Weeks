@@ -109,7 +109,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
           </button>
         </ModalHeader>
 
-        {/* Notificação visual */}
+        
         {notification.show && (
           <NotificationMessage type={notification.type}>
             {notification.message}

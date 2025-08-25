@@ -63,6 +63,15 @@ export default function RegisterScreen() {
     }
   };
 
+  const validatePassword = (password) => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    
+    return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -80,8 +89,10 @@ export default function RegisterScreen() {
 
     if (!formData.password) {
       newErrors.password = "Senha é obrigatória";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Senha deve ter pelo menos 8 caracteres";
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password = "Senha deve conter: 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial";
     }
 
     if (!formData.confirmPassword) {
@@ -202,7 +213,7 @@ export default function RegisterScreen() {
                     handleInputChange("password", e.target.value)
                   }
                   hasError={!!errors.password}
-                  placeholder="••••••••"
+                  placeholder="Mínimo 8 caracteres"
                 />
                 <IconRight
                   type="button"
@@ -212,6 +223,14 @@ export default function RegisterScreen() {
                 </IconRight>
               </InputWrapper>
               {errors.password && <ErrorText>{errors.password}</ErrorText>}
+              <div style={{
+                fontSize: '12px',
+                color: '#6b7280',
+                marginTop: '4px',
+                lineHeight: '1.4'
+              }}>
+                A senha deve conter: 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial
+              </div>
             </Field>
             <Field>
               <Label htmlFor="confirmPassword">Confirmar senha</Label>
