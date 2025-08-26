@@ -78,13 +78,43 @@ export const RoomsGrid = styled.div`
         flex: 1;
       }
       
-      .participant-count {
-        background: #f3f4f6;
-        color: #6b7280;
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        font-size: 0.875rem;
-        font-weight: 500;
+      .room-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        
+        .participant-count {
+          background: #f3f4f6;
+          color: #6b7280;
+          padding: 0.25rem 0.75rem;
+          border-radius: 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+        
+        .delete-button {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0.25rem;
+          border-radius: 0.25rem;
+          font-size: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+          opacity: 0.6;
+          
+          &:hover {
+            opacity: 1;
+            background: #fee2e2;
+            transform: scale(1.1);
+          }
+          
+          &:active {
+            transform: scale(0.95);
+          }
+        }
       }
     }
     

@@ -184,6 +184,25 @@ export const useRooms = () => {
     }
   }, []);
 
+  const deleteRoom = useCallback(async (roomId) => {
+    try {
+      setError(null);
+      
+      const response = await roomsAPI.deleteRoom(roomId);
+      
+      if (response.data.success) {
+        // Remover a sala da lista local
+        setRooms(prevRooms => prevRooms.filter(room => room._id !== roomId));
+        return { success: true, message: response.data.message };
+      } else {
+        return { success: false, message: response.data.message };
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Erro ao deletar sala';
+      return { success: false, message: errorMessage };
+    }
+  }, []);
+
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
@@ -198,7 +217,8 @@ export const useRooms = () => {
     completeGoal,
     editRoom,
     getRoom,
-    inviteUser
+    inviteUser,
+    deleteRoom
   };
 };
 

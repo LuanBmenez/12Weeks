@@ -99,6 +99,9 @@ export const friendsAPI = {
   
   getUnreadCount: () => 
     api.get(API_CONFIG.ENDPOINTS.FRIENDS.NOTIFICATIONS_UNREAD_COUNT),
+  
+  cleanupOldRequests: () =>
+    api.post('/friends/cleanup-old-requests'),
 };
 
 
@@ -138,6 +141,9 @@ export const roomsAPI = {
   
   inviteUser: (roomId, data) => 
     api.post(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/invite`, data),
+  
+  deleteRoom: (roomId) => 
+    api.delete(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}`),
 };
 
 export default api;

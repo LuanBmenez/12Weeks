@@ -29,14 +29,17 @@ import {
 
 const RoomsList = () => {
   const navigate = useNavigate();
-  const { rooms, loading, error, fetchRooms, createRoom } = useRooms();
+  const { rooms, loading, error, fetchRooms, createRoom, deleteRoom } = useRooms();
   const { showSuccess, showError, showWarning } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: ''
   });
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchRooms();
@@ -94,6 +97,38 @@ const RoomsList = () => {
 
   const handleEnterRoom = (roomId) => {
     navigate(`/room/${roomId}`);
+  };
+
+  const handleDeleteClick = (room, e) => {
+    e.stopPropagation();
+    setRoomToDelete(room);
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setRoomToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!roomToDelete) return;
+
+    try {
+      setDeleting(true);
+      const result = await deleteRoom(roomToDelete._id);
+      
+      if (result.success) {
+        handleCloseDeleteModal();
+        showSuccess('Sala deletada com sucesso! 🗑️');
+      } else {
+        showError(result.message || 'Erro ao deletar sala');
+      }
+    } catch (err) {
+      showError('Erro interno ao deletar sala');
+      console.error('Erro ao deletar sala:', err);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -162,9 +197,18 @@ const RoomsList = () => {
             <div key={room._id} className="room-card" onClick={() => handleRoomClick(room)}>
               <div className="room-header">
                 <h3>{room.name}</h3>
-                <span className="participant-count">
-                  {room.participants?.length || 0} participantes
-                </span>
+                <div className="room-actions">
+                  <span className="participant-count">
+                    {room.participants?.length || 0} participantes
+                  </span>
+                  <button 
+                    className="delete-button"
+                    onClick={(e) => handleDeleteClick(room, e)}
+                    title="Deletar sala"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
               <p className="room-description">{room.description}</p>
               <div className="room-footer">
@@ -237,6 +281,46 @@ const RoomsList = () => {
                   </SubmitButton>
                 </ButtonGroup>
               </Form>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && roomToDelete && (
+        <Modal>
+          <ModalContent>
+            <ModalHeader>
+              <ModalTitle>Confirmar Exclusão</ModalTitle>
+              <CloseButton onClick={handleCloseDeleteModal}>×</CloseButton>
+            </ModalHeader>
+            <ModalBody>
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗑️</div>
+                <h3 style={{ margin: '0 0 1rem 0', color: '#dc2626' }}>
+                  Deletar Sala "{roomToDelete.name}"?
+                </h3>
+                <p style={{ color: '#6b7280', marginBottom: '2rem', lineHeight: '1.5' }}>
+                  Esta ação é <strong>irreversível</strong>. Todas as metas, progresso e dados 
+                  relacionados a esta sala serão permanentemente removidos para todos os participantes.
+                </p>
+                <ButtonGroup>
+                  <CancelButton type="button" onClick={handleCloseDeleteModal}>
+                    Cancelar
+                  </CancelButton>
+                  <SubmitButton 
+                    type="button" 
+                    onClick={handleConfirmDelete}
+                    disabled={deleting}
+                    style={{ 
+                      background: '#dc2626',
+                      borderColor: '#dc2626'
+                    }}
+                  >
+                    {deleting ? 'Deletando...' : 'Sim, Deletar'}
+                  </SubmitButton>
+                </ButtonGroup>
+              </div>
             </ModalBody>
           </ModalContent>
         </Modal>

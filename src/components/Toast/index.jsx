@@ -179,17 +179,7 @@ export const ToastProvider = ({ children, maxToasts = 5, position = 'top-right' 
           />
         ))}
         
-        {toasts.length > 1 && (
-          <div className="toast-controls">
-            <button 
-              onClick={clearAllToasts}
-              className="clear-all-btn"
-              title="Limpar todos"
-            >
-              🗑️ Limpar Todos
-            </button>
-          </div>
-        )}
+       
       </ToastContainer>
     </ToastContext.Provider>
   );

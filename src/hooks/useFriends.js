@@ -159,6 +159,17 @@ export const useFriends = () => {
     setError('');
   };
 
+  // Função para limpar solicitações antigas
+  const cleanupOldRequests = async () => {
+    try {
+      const response = await api.post('/friends/cleanup-old-requests');
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erro ao limpar solicitações antigas';
+      return { success: false, message };
+    }
+  };
+
 
   useEffect(() => {
     if (user) {
@@ -182,6 +193,7 @@ export const useFriends = () => {
     clearSearch,
     fetchFriendRequests,
     fetchFriends,
-    removeFriend
+    removeFriend,
+    cleanupOldRequests
   };
 };

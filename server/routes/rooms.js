@@ -515,4 +515,56 @@ router.post('/:roomId/invite', auth, async (req, res) => {
   }
 });
 
+// Deletar sala (apenas admin)
+router.delete('/:roomId', auth, async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.roomId);
+    
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sala não encontrada'
+      });
+    }
+    
+    // Verificar se o usuário é admin da sala
+    const isAdmin = room.participants.some(
+      p => p.user.toString() === req.user._id.toString() && p.role === 'admin'
+    );
+    
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Apenas administradores podem deletar a sala'
+      });
+    }
+    
+    // Remover todas as metas individuais relacionadas à sala de todos os usuários
+    await User.updateMany(
+      { 'individualGoals.roomId': room._id },
+      { $pull: { individualGoals: { roomId: room._id } } }
+    );
+    
+    // Remover todo o progresso diário relacionado à sala de todos os usuários
+    await User.updateMany(
+      { 'dailyProgress.roomId': room._id },
+      { $pull: { dailyProgress: { roomId: room._id } } }
+    );
+    
+    // Deletar a sala
+    await Room.findByIdAndDelete(req.params.roomId);
+    
+    res.json({
+      success: true,
+      message: 'Sala deletada com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao deletar sala:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
 export default router;

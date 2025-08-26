@@ -28,7 +28,7 @@ router.get('/search/:friendCode', auth, async (req, res) => {
     
 
     const existingRequest = currentUser.friendRequests.find(
-      request => request.from.toString() === targetUser._id.toString()
+      request => request.from.toString() === targetUser._id.toString() && request.status === 'pending'
     );
 
     res.json({
@@ -80,7 +80,7 @@ router.post('/request', auth, [
 
     
     const existingRequest = req.user.friendRequests.find(
-      request => request.from.toString() === targetUser._id.toString()
+      request => request.from.toString() === targetUser._id.toString() && request.status === 'pending'
     );
 
     if (existingRequest) {
@@ -328,7 +328,26 @@ router.delete('/remove/:friendId', auth, async (req, res) => {
       $pull: { friends: currentUserId }
     });
 
+    // Limpar solicitações de amizade antigas entre os dois usuários
+    await User.findByIdAndUpdate(currentUserId, {
+      $pull: { 
+        friendRequests: { 
+          from: friendId,
+          status: { $in: ['accepted', 'rejected'] }
+        }
+      }
+    });
 
+    await User.findByIdAndUpdate(friendId, {
+      $pull: { 
+        friendRequests: { 
+          from: currentUserId,
+          status: { $in: ['accepted', 'rejected'] }
+        }
+      }
+    });
+
+    // Enviar notificação para o amigo removido
     await User.findByIdAndUpdate(friendId, {
       $push: {
         notifications: {
@@ -344,6 +363,37 @@ router.delete('/remove/:friendId', auth, async (req, res) => {
 
   } catch (error) {
     console.error('Erro ao remover amigo:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para limpar solicitações antigas (utilitário para resolver casos existentes)
+router.post('/cleanup-old-requests', auth, async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    
+    // Buscar o usuário atual
+    const currentUser = await User.findById(currentUserId);
+    
+    // Limpar solicitações antigas que não são mais relevantes
+    // (accepted/rejected de usuários que não são mais amigos)
+    const friendIds = currentUser.friends.map(id => id.toString());
+    
+    await User.findByIdAndUpdate(currentUserId, {
+      $pull: { 
+        friendRequests: { 
+          status: { $in: ['accepted', 'rejected'] }
+        }
+      }
+    });
+
+    res.json({ 
+      message: 'Solicitações antigas limpas com sucesso',
+      cleanedRequests: true 
+    });
+
+  } catch (error) {
+    console.error('Erro ao limpar solicitações:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });

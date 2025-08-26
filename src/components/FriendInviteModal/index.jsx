@@ -40,6 +40,9 @@ export default function FriendInviteModal({ isOpen, onClose }) {
   const [searchCode, setSearchCode] = useState('');
   const [copyMessage, setCopyMessage] = useState('');
   const [notification, setNotification] = useState({ message: '', type: '', show: false });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [friendToDelete, setFriendToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   
   const {
     friendCode,
@@ -52,7 +55,8 @@ export default function FriendInviteModal({ isOpen, onClose }) {
     respondToRequest,
     copyFriendCode,
     clearSearch,
-    removeFriend
+    removeFriend,
+    cleanupOldRequests
   } = useFriends();
 
   const showNotification = (message, type = 'success') => {
@@ -88,12 +92,47 @@ export default function FriendInviteModal({ isOpen, onClose }) {
     showNotification(result.message, result.success ? 'success' : 'error');
   };
 
-  const handleRemoveFriend = async (friendId) => {
-    const result = await removeFriend(friendId);
-    if (result.success) {
-      showNotification(result.message, 'success');
-    } else {
-      showNotification(result.message, 'error');
+  const handleRemoveFriendClick = (friend) => {
+    setFriendToDelete(friend);
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setFriendToDelete(null);
+  };
+
+  const handleConfirmRemoveFriend = async () => {
+    if (!friendToDelete) return;
+
+    try {
+      setDeleting(true);
+      const result = await removeFriend(friendToDelete._id);
+      if (result.success) {
+        showNotification(result.message, 'success');
+        handleCloseDeleteModal();
+      } else {
+        showNotification(result.message, 'error');
+      }
+    } catch (err) {
+      showNotification('Erro interno ao remover amigo', 'error');
+      console.error('Erro ao remover amigo:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCleanupOldRequests = async () => {
+    try {
+      const result = await cleanupOldRequests();
+      if (result.success) {
+        showNotification('Solicitações antigas limpas! Agora você pode enviar novas solicitações.', 'success');
+      } else {
+        showNotification(result.message, 'error');
+      }
+    } catch (err) {
+      showNotification('Erro ao limpar solicitações antigas', 'error');
+      console.error('Erro ao limpar solicitações:', err);
     }
   };
 
@@ -195,6 +234,40 @@ export default function FriendInviteModal({ isOpen, onClose }) {
                   )}
                 </UserResult>
               )}
+
+              <div style={{ 
+                marginTop: '2rem', 
+                padding: '1rem', 
+                background: '#f8f9fa', 
+                borderRadius: '0.5rem',
+                border: '1px solid #e9ecef'
+              }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#495057' }}>
+                  🔧 Problemas com solicitações?
+                </h4>
+                <p style={{ 
+                  margin: '0 0 1rem 0', 
+                  fontSize: '0.8rem', 
+                  color: '#6c757d', 
+                  lineHeight: '1.4' 
+                }}>
+                  Se você não consegue enviar solicitação para alguém que já foi seu amigo, 
+                  clique no botão abaixo para limpar solicitações antigas.
+                </p>
+                <ActionButton 
+                  onClick={handleCleanupOldRequests}
+                  disabled={loading}
+                  style={{ 
+                    background: '#ffc107',
+                    borderColor: '#ffc107',
+                    color: '#000',
+                    fontSize: '0.8rem',
+                    padding: '0.4rem 0.8rem'
+                  }}
+                >
+                  🧹 Limpar Solicitações Antigas
+                </ActionButton>
+              </div>
             </SearchSection>
           </TabContent>
 
@@ -280,7 +353,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
                       <UserCode>Código: {friend.friendCode}</UserCode>
                     </FriendInfo>
                     <RemoveButton 
-                      onClick={() => handleRemoveFriend(friend._id)}
+                      onClick={() => handleRemoveFriendClick(friend)}
                     >
                       <Trash2 size={16} />
                       Remover Amigo
@@ -292,6 +365,53 @@ export default function FriendInviteModal({ isOpen, onClose }) {
           </TabContent>
         </ModalBody>
       </ModalContent>
+
+      {/* Modal de Confirmação de Remoção de Amigo */}
+      {showDeleteModal && friendToDelete && (
+        <ModalOverlay onClick={handleCloseDeleteModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <h2>Confirmar Remoção</h2>
+              <button onClick={handleCloseDeleteModal}>
+                <X size={20} />
+              </button>
+            </ModalHeader>
+            <ModalBody>
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💔</div>
+                <h3 style={{ margin: '0 0 1rem 0', color: '#dc2626' }}>
+                  Remover "{friendToDelete.name}" da sua lista de amigos?
+                </h3>
+                <p style={{ color: '#6b7280', marginBottom: '2rem', lineHeight: '1.5' }}>
+                  Esta ação é <strong>irreversível</strong>. Vocês não serão mais amigos e precisarão 
+                  enviar uma nova solicitação de amizade para se conectarem novamente.
+                </p>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <ActionButton 
+                    onClick={handleCloseDeleteModal}
+                    style={{ 
+                      background: '#6b7280',
+                      borderColor: '#6b7280'
+                    }}
+                  >
+                    Cancelar
+                  </ActionButton>
+                  <ActionButton 
+                    onClick={handleConfirmRemoveFriend}
+                    disabled={deleting}
+                    style={{ 
+                      background: '#dc2626',
+                      borderColor: '#dc2626'
+                    }}
+                  >
+                    {deleting ? 'Removendo...' : 'Sim, Remover'}
+                  </ActionButton>
+                </div>
+              </div>
+            </ModalBody>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </ModalOverlay>
   );
 }
