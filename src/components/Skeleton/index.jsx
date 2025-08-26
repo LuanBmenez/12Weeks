@@ -439,7 +439,7 @@ export const DashboardSkeleton = memo(({
   rounded = false
 }) => (
   <div style={{ padding: '20px' }}>
-    {/* Header */}
+    
     <div style={{ 
       display: 'flex', 
       justifyContent: 'space-between', 
@@ -475,7 +475,7 @@ export const DashboardSkeleton = memo(({
       </div>
     </div>
 
-    {/* Stats Cards */}
+   
     <div style={{ 
       display: 'grid', 
       gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
@@ -493,7 +493,7 @@ export const DashboardSkeleton = memo(({
       ))}
     </div>
 
-    {/* Recent Activity */}
+   
     <div style={{ marginBottom: '30px' }}>
       <Skeleton 
         type="text" 

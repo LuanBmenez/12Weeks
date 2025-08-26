@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  // Metas individuais do usuário
+  
   individualGoals: [{
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -98,7 +98,7 @@ const userSchema = new mongoose.Schema({
       default: true
     }
   }],
-  // Progresso diário individual
+  
   dailyProgress: [{
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -123,7 +123,7 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   }],
-  // Progresso semanal individual
+  
   weeklyProgress: {
     currentWeek: {
       type: Number,
@@ -155,23 +155,23 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Método para gerar código de amigo único
+
 userSchema.methods.generateFriendCode = function() {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
 };
 
-// Middleware para hash de senha e geração de código de amigo
+
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password') && !this.isNew) return next();
   
   try {
-    // Hash da senha
+    
     if (this.isModified('password')) {
       const salt = await bcrypt.genSalt(12);
       this.password = await bcrypt.hash(this.password, salt);
     }
     
-    // Geração de código de amigo único
+    
     if (this.isNew || this.isModified('friendCode')) {
       let isUnique = false;
       let attempts = 0;
@@ -197,19 +197,19 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Método para comparar senhas
+
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Método para remover senha do JSON
+
 userSchema.methods.toJSON = function() {
   const user = this.toObject();
   delete user.password;
   return user;
 };
 
-// Método para calcular progresso diário individual
+
 userSchema.methods.calculateDailyCompletion = function(roomId, date) {
   const dailyProgress = this.dailyProgress.find(progress => 
     progress.roomId.toString() === roomId.toString() &&
@@ -230,7 +230,7 @@ userSchema.methods.calculateDailyCompletion = function(roomId, date) {
   return dailyProgress?.dailyPercentage || 0;
 };
 
-// Método para calcular progresso semanal individual
+
 userSchema.methods.calculateWeeklyProgress = function(roomId) {
   const today = new Date();
   const weekStart = new Date(today);
@@ -272,7 +272,7 @@ userSchema.methods.calculateWeeklyProgress = function(roomId) {
   return 0;
 };
 
-// Método para verificar avanço de semana individual
+
 userSchema.methods.checkWeekAdvance = function(roomId) {
   const today = new Date();
   const weekStart = new Date(today);

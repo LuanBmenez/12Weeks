@@ -42,7 +42,7 @@ export const SkeletonExample = () => {
       <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
         <h2>Carregando com Skeleton Melhorado...</h2>
         
-        {/* Controles */}
+       
         <div style={{ 
           display: 'flex', 
           gap: '16px', 
@@ -83,7 +83,7 @@ export const SkeletonExample = () => {
           </select>
         </div>
 
-        {/* Header com avatar e título */}
+        
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '30px' }}>
           <AvatarSkeleton size="large" variant={variant} animated={animated} rounded={rounded} />
           <div style={{ marginLeft: '16px', flex: 1 }}>
@@ -92,7 +92,7 @@ export const SkeletonExample = () => {
           </div>
         </div>
 
-        {/* Cards em grid */}
+        
         <SkeletonGrid minWidth="280px" gap="20px" style={{ marginBottom: '30px' }}>
           <CardSkeleton 
             variant={variant} 
@@ -120,7 +120,7 @@ export const SkeletonExample = () => {
           />
         </SkeletonGrid>
 
-        {/* Lista de itens */}
+        
         <div style={{ marginBottom: '30px' }}>
           <Skeleton type="text" width="40%" height="20px" lines={1} style={{ marginBottom: '16px' }} variant={variant} animated={animated} rounded={rounded} />
           {Array.from({ length: 4 }).map((_, index) => (
@@ -137,13 +137,13 @@ export const SkeletonExample = () => {
           ))}
         </div>
 
-        {/* Tabela */}
+       
         <div style={{ marginBottom: '30px' }}>
           <Skeleton type="text" width="30%" height="20px" lines={1} style={{ marginBottom: '16px' }} variant={variant} animated={animated} rounded={rounded} />
           <TableSkeleton rows={4} columns={3} variant={variant} animated={animated} rounded={rounded} />
         </div>
 
-        {/* Formulário */}
+        
         <div style={{ marginBottom: '30px' }}>
           <Skeleton type="text" width="25%" height="20px" lines={1} style={{ marginBottom: '16px' }} variant={variant} animated={animated} rounded={rounded} />
           <FormSkeleton 
@@ -155,7 +155,7 @@ export const SkeletonExample = () => {
           />
         </div>
 
-        {/* Layouts específicos */}
+        
         <div style={{ marginBottom: '30px' }}>
           <Skeleton type="text" width="35%" height="20px" lines={1} style={{ marginBottom: '16px' }} variant={variant} animated={animated} rounded={rounded} />
           
@@ -172,7 +172,7 @@ export const SkeletonExample = () => {
           </SkeletonColumn>
         </div>
 
-        {/* Componentes específicos da aplicação */}
+        
         <div style={{ marginBottom: '30px' }}>
           <Skeleton type="text" width="45%" height="20px" lines={1} style={{ marginBottom: '16px' }} variant={variant} animated={animated} rounded={rounded} />
           
@@ -211,7 +211,7 @@ export const SkeletonExample = () => {
         </ul>
       </div>
       
-      { Botão para testar novamente */}
+      
       <button 
         onClick={handleReset}
         style={{ 

@@ -56,12 +56,15 @@ const Room = () => {
   const [inviteFriendCode, setInviteFriendCode] = useState('');
   const [inviting, setInviting] = useState(false);
   
-  // Estados para edição inline
+
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  
+  // Estados para expansão das metas dos participantes
+  const [expandedParticipants, setExpandedParticipants] = useState(new Set());
 
   useEffect(() => {
     loadRoom();
@@ -89,11 +92,11 @@ const Room = () => {
   };
 
   const loadRoomData = (roomData) => {
-    // Usar metas individuais do usuário em vez das metas globais da sala
+
     const activeGoals = roomData.userIndividualGoals?.filter(goal => goal.isActive) || [];
     setWeeklyGoals(activeGoals);
     
-    // Usar progresso individual do usuário
+
     const todayProgressData = roomData.userTodayProgress;
     
     if (todayProgressData) {
@@ -104,11 +107,11 @@ const Room = () => {
       setDailyPercentage(0);
     }
     
-    // Usar progresso individual do usuário
+
     setOverallPercentage(roomData.userProgress?.overallPercentage || 0);
     setCurrentWeek(roomData.userProgress?.currentWeek || 1);
     
-    // Mostrar feedback nos fins de semana se houver progresso
+
     const today = new Date();
     if ((today.getDay() === 0 || today.getDay() === 6) && (roomData.userProgress?.overallPercentage || 0) > 0) {
       setShowFeedback(true);
@@ -215,7 +218,7 @@ const Room = () => {
     }
   };
 
-  // Funções para edição inline
+ 
   const startEditingTitle = () => {
     setEditTitle(room.name);
     setEditingTitle(true);
@@ -340,7 +343,7 @@ const Room = () => {
   };
 
   const getParticipantProgress = (participant) => {
-    // Agora usando os dados reais de progresso dos participantes
+    
     if (participant.progress && participant.progress.hasGoals) {
       return participant.progress.dailyPercentage || 0;
     }
@@ -351,7 +354,20 @@ const Room = () => {
     return room?.participants?.some(p => p.user._id === friendId);
   };
 
-  // Verificar se o usuário é admin para permitir edição
+  // Função para alternar expansão das metas dos participantes
+  const toggleParticipantExpansion = (participantId) => {
+    setExpandedParticipants(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(participantId)) {
+        newSet.delete(participantId);
+      } else {
+        newSet.add(participantId);
+      }
+      return newSet;
+    });
+  };
+
+
   const isAdmin = room?.participants?.some(p => 
     p.user._id === user?._id && p.role === 'admin'
   );
@@ -494,7 +510,7 @@ const Room = () => {
         </Header>
 
         <Content>
-          {/* Seção de Metas Semanais */}
+          
           <GoalsSection>
             <GoalsHeader>
               <h2>Metas Semanais</h2>
@@ -585,7 +601,7 @@ const Room = () => {
             )}
           </GoalsSection>
 
-          {/* Seção de Progresso */}
+          
           <ProgressSection>
             <ProgressCard>
               <h3>Progresso de Hoje</h3>
@@ -612,7 +628,7 @@ const Room = () => {
             </ProgressCard>
           </ProgressSection>
 
-          {/* Seção de Participantes */}
+          
           <ParticipantsSection>
             <ParticipantsHeader>
               <h2>Participantes da Sala</h2>
@@ -724,50 +740,88 @@ const Room = () => {
             <ParticipantsList>
               {room.participants?.map((participant) => (
                 <ParticipantCard key={participant.user._id}>
-                  <div className="participant-info">
-                    <div className="avatar">
-                      {participant.user.profilePicture ? (
-                        <img 
-                          src={participant.user.profilePicture} 
-                          alt={participant.user.name}
-                        />
-                      ) : (
-                        <div className="initials">
-                          {participant.user.name
-                            .split(' ')
-                            .map(word => word.charAt(0))
-                            .join('')
-                            .toUpperCase()
-                            .slice(0, 2)
-                          }
-                        </div>
-                      )}
-                    </div>
-                    <div className="details">
-                      <h4>{participant.user.name}</h4>
-                      <span className="role">{participant.role === 'admin' ? 'Administrador' : 'Membro'}</span>
-                    </div>
-                  </div>
-                   
-                  {weeklyGoals.length > 0 && (
-                    <div className="progress-info">
-                      {participant.progress && participant.progress.hasGoals ? (
-                        <>
-                          <div className="progress-bar">
-                            <div 
-                              className="progress-fill" 
-                              style={{ width: `${getParticipantProgress(participant)}%` }}
-                            ></div>
+                  <div className="participant-main">
+                    <div className="participant-info">
+                      <div className="avatar">
+                        {participant.user.profilePicture ? (
+                          <img 
+                            src={participant.user.profilePicture} 
+                            alt={participant.user.name}
+                          />
+                        ) : (
+                          <div className="initials">
+                            {participant.user.name
+                              .split(' ')
+                              .map(word => word.charAt(0))
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2)
+                            }
                           </div>
-                          <span className="progress-text">
-                            {Math.round(getParticipantProgress(participant))}%
-                          </span>
-                        </>
-                      ) : (
-                        <div className="no-goals-indicator">
-                          <span className="no-goals-text">Sem metas</span>
-                        </div>
-                      )}
+                        )}
+                      </div>
+                      <div className="details">
+                        <h4>{participant.user.name}</h4>
+                        <span className="role">{participant.role === 'admin' ? 'Administrador' : 'Membro'}</span>
+                      </div>
+                    </div>
+                     
+                    {weeklyGoals.length > 0 && (
+                      <div 
+                        className={`progress-info ${participant.progress && participant.progress.hasGoals ? 'clickable' : ''}`}
+                        onClick={() => participant.progress && participant.progress.hasGoals && toggleParticipantExpansion(participant.user._id)}
+                      >
+                        {participant.progress && participant.progress.hasGoals ? (
+                          <>
+                            <div className="progress-bar">
+                              <div 
+                                className="progress-fill" 
+                                style={{ width: `${getParticipantProgress(participant)}%` }}
+                              ></div>
+                            </div>
+                            <div className="progress-text-container">
+                              <span className="progress-text">
+                                {Math.round(getParticipantProgress(participant))}%
+                              </span>
+                              <span className={`expand-arrow ${expandedParticipants.has(participant.user._id) ? 'expanded' : ''}`}>
+                                ▼
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="no-goals-indicator">
+                            <span className="no-goals-text">Sem metas</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Seção expandida com metas individuais */}
+                  {expandedParticipants.has(participant.user._id) && participant.progress && participant.progress.hasGoals && (
+                    <div className="participant-goals-expanded">
+                      <h5>Metas de hoje:</h5>
+                      <div className="goals-list">
+                        {participant.progress.goals?.map((goal, index) => (
+                          <div key={goal.goalId || index} className={`goal-item ${goal.completed ? 'completed' : 'pending'}`}>
+                            <span className="goal-status">
+                              {goal.completed ? '✅' : '⏳'}
+                            </span>
+                            <span className="goal-text">
+                              {goal.text || `Meta ${index + 1}`}
+                            </span>
+                          </div>
+                        )) || (
+                          <div className="no-goals-data">
+                            <span>Dados das metas não disponíveis</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="goals-summary">
+                        <span className="completed-count">
+                          {participant.progress.goals?.filter(g => g.completed).length || 0} de {participant.progress.goals?.length || 0} concluídas
+                        </span>
+                      </div>
                     </div>
                   )}
                 </ParticipantCard>
@@ -775,7 +829,7 @@ const Room = () => {
             </ParticipantsList>
           </ParticipantsSection>
 
-          {/* Seção de Feedback */}
+         
           {showFeedback && (
             <FeedbackSection>
               <FeedbackCard className={feedback.type}>

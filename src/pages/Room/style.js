@@ -618,12 +618,17 @@ export const ParticipantsList = styled.div`
 
 export const ParticipantCard = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 1rem;
   background: #f8fafc;
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
+  
+  .participant-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   
   .participant-info {
     display: flex;
@@ -677,6 +682,18 @@ export const ParticipantCard = styled.div`
     display: flex;
     align-items: center;
     gap: 1rem;
+    transition: all 0.2s ease;
+    
+    &.clickable {
+      cursor: pointer;
+      border-radius: 0.25rem;
+      padding: 0.25rem;
+      margin: -0.25rem;
+      
+      &:hover {
+        background: rgba(59, 130, 246, 0.1);
+      }
+    }
     
     .progress-bar {
       width: 100px;
@@ -692,12 +709,131 @@ export const ParticipantCard = styled.div`
       }
     }
     
+    .progress-text-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      .progress-text {
+        color: #374151;
+        font-weight: 600;
+        font-size: 0.875rem;
+        min-width: 3rem;
+        text-align: right;
+      }
+      
+      .expand-arrow {
+        color: #6b7280;
+        font-size: 0.75rem;
+        transition: transform 0.2s ease;
+        
+        &.expanded {
+          transform: rotate(180deg);
+        }
+      }
+    }
+    
     .progress-text {
       color: #374151;
       font-weight: 600;
       font-size: 0.875rem;
       min-width: 3rem;
       text-align: right;
+    }
+  }
+  
+  // Seção expandida das metas dos participantes
+  .participant-goals-expanded {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    animation: slideDown 0.3s ease-out;
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    h5 {
+      margin: 0 0 0.75rem 0;
+      color: #374151;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    
+    .goals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      
+      .goal-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s ease;
+        
+        &.completed {
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          
+          .goal-text {
+            text-decoration: line-through;
+            color: #16a34a;
+          }
+        }
+        
+        &.pending {
+          background: #fef3c7;
+          border: 1px solid #fde68a;
+          
+          .goal-text {
+            color: #92400e;
+          }
+        }
+        
+        .goal-status {
+          font-size: 1rem;
+          flex-shrink: 0;
+        }
+        
+        .goal-text {
+          font-size: 0.875rem;
+          font-weight: 500;
+          flex: 1;
+        }
+      }
+      
+      .no-goals-data {
+        text-align: center;
+        padding: 1rem;
+        color: #6b7280;
+        font-style: italic;
+        font-size: 0.875rem;
+      }
+    }
+    
+    .goals-summary {
+      display: flex;
+      justify-content: center;
+      padding-top: 0.5rem;
+      border-top: 1px solid #f3f4f6;
+      
+      .completed-count {
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
     }
   }
 `;

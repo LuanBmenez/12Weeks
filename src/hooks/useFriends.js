@@ -159,7 +159,7 @@ export const useFriends = () => {
     setError('');
   };
 
-  // Função para limpar solicitações antigas
+
   const cleanupOldRequests = async () => {
     try {
       const response = await api.post('/friends/cleanup-old-requests');

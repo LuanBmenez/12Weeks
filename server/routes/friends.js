@@ -328,7 +328,7 @@ router.delete('/remove/:friendId', auth, async (req, res) => {
       $pull: { friends: currentUserId }
     });
 
-    // Limpar solicitações de amizade antigas entre os dois usuários
+
     await User.findByIdAndUpdate(currentUserId, {
       $pull: { 
         friendRequests: { 
@@ -347,7 +347,7 @@ router.delete('/remove/:friendId', auth, async (req, res) => {
       }
     });
 
-    // Enviar notificação para o amigo removido
+    
     await User.findByIdAndUpdate(friendId, {
       $push: {
         notifications: {
@@ -367,16 +367,15 @@ router.delete('/remove/:friendId', auth, async (req, res) => {
   }
 });
 
-// Rota para limpar solicitações antigas (utilitário para resolver casos existentes)
+
 router.post('/cleanup-old-requests', auth, async (req, res) => {
   try {
     const currentUserId = req.user._id;
     
-    // Buscar o usuário atual
+
     const currentUser = await User.findById(currentUserId);
     
-    // Limpar solicitações antigas que não são mais relevantes
-    // (accepted/rejected de usuários que não são mais amigos)
+   
     const friendIds = currentUser.friends.map(id => id.toString());
     
     await User.findByIdAndUpdate(currentUserId, {

@@ -187,7 +187,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
         </ModalTabs>
 
         <ModalBody>
-          {/* Tab: Buscar Amigo */}
+          
           <TabContent active={activeTab === 'search'}>
             <SearchSection>
               <h3>Buscar por Código de Amigo</h3>
@@ -271,7 +271,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
             </SearchSection>
           </TabContent>
 
-          {/* Tab: Meu Código */}
+          
           <TabContent active={activeTab === 'share'}>
             <ShareSection>
               <h3>Seu Código de Amigo</h3>
@@ -293,7 +293,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
             </ShareSection>
           </TabContent>
 
-          {/* Tab: Solicitações */}
+          
           <TabContent active={activeTab === 'requests'}>
             <RequestsSection>
               <h3>Solicitações de Amizade</h3>
@@ -334,7 +334,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
             </RequestsSection>
           </TabContent>
 
-          {/* Tab: Amigos */}
+          
           <TabContent active={activeTab === 'friends'}>
             <FriendsSection>
               <h3>Seus Amigos</h3>
@@ -366,7 +366,7 @@ export default function FriendInviteModal({ isOpen, onClose }) {
         </ModalBody>
       </ModalContent>
 
-      {/* Modal de Confirmação de Remoção de Amigo */}
+    
       {showDeleteModal && friendToDelete && (
         <ModalOverlay onClick={handleCloseDeleteModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>

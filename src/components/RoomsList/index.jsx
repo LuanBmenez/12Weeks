@@ -230,7 +230,7 @@ const RoomsList = () => {
         </RoomsGrid>
       )}
 
-      {/* Modal de Criação de Sala */}
+     
       {showCreateModal && (
         <Modal>
           <ModalContent>
@@ -286,7 +286,7 @@ const RoomsList = () => {
         </Modal>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
+      
       {showDeleteModal && roomToDelete && (
         <Modal>
           <ModalContent>
