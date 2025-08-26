@@ -49,6 +49,113 @@ export const RoomInfo = styled.div`
     color: #64748b;
     font-size: 1.1rem;
   }
+
+
+
+  .title-with-edit, .description-with-edit {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    span {
+      flex: 1;
+    }
+  }
+
+  .edit-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+    opacity: 0.7;
+    
+    &:hover {
+      opacity: 1;
+      background: #f1f5f9;
+      transform: scale(1.1);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .edit-input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: white;
+    border: 2px solid #3b82f6;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .edit-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    flex: 1;
+    
+    &.title-input {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1e293b;
+    }
+    
+    &.description-input {
+      font-size: 1.1rem;
+      color: #64748b;
+    }
+    
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .save-btn, .cancel-btn {
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .save-btn {
+    background: #10b981;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: #059669;
+    }
+  }
+
+  .cancel-btn {
+    background: #ef4444;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: #dc2626;
+    }
+  }
 `;
 
 export const Content = styled.div`

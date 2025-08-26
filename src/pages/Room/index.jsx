@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRooms } from '../../hooks/useRooms';
 import { useFriends } from '../../hooks/useFriends';
 import { useToast } from '../../components/Toast';
+import { useAuth } from '../../hooks/useAuth';
+import { roomsAPI } from '../../config/api';
 
 import { 
   Container, 
@@ -37,6 +39,7 @@ const Room = () => {
   const { getRoom, addDailyGoals, completeGoal, inviteUser } = useRooms();
   const { friends, fetchFriends } = useFriends();
   const { showSuccess, showError, showWarning } = useToast();
+  const { user } = useAuth();
  
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +55,13 @@ const Room = () => {
   const [inviteMethod, setInviteMethod] = useState('friendCode'); 
   const [inviteFriendCode, setInviteFriendCode] = useState('');
   const [inviting, setInviting] = useState(false);
+  
+  // Estados para edição inline
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadRoom();
@@ -205,6 +215,86 @@ const Room = () => {
     }
   };
 
+  // Funções para edição inline
+  const startEditingTitle = () => {
+    setEditTitle(room.name);
+    setEditingTitle(true);
+  };
+
+  const startEditingDescription = () => {
+    setEditDescription(room.description || '');
+    setEditingDescription(true);
+  };
+
+  const cancelEditingTitle = () => {
+    setEditingTitle(false);
+    setEditTitle('');
+  };
+
+  const cancelEditingDescription = () => {
+    setEditingDescription(false);
+    setEditDescription('');
+  };
+
+  const saveTitle = async () => {
+    if (!editTitle.trim()) {
+      showWarning('O título não pode estar vazio!');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await roomsAPI.editRoom(roomId, { name: editTitle.trim() });
+
+      if (response.data.success) {
+        setRoom(prev => ({ ...prev, name: editTitle.trim() }));
+        setEditingTitle(false);
+        setEditTitle('');
+        showSuccess('Título atualizado com sucesso! ✏️');
+      } else {
+        showError(response.data.message || 'Erro ao atualizar título');
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar título:', err);
+      showError('Erro interno ao atualizar título');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveDescription = async () => {
+    try {
+      setSaving(true);
+      const response = await roomsAPI.editRoom(roomId, { description: editDescription.trim() });
+
+      if (response.data.success) {
+        setRoom(prev => ({ ...prev, description: editDescription.trim() }));
+        setEditingDescription(false);
+        setEditDescription('');
+        showSuccess('Descrição atualizada com sucesso! ✏️');
+      } else {
+        showError(response.data.message || 'Erro ao atualizar descrição');
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar descrição:', err);
+      showError('Erro interno ao atualizar descrição');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyPress = (e, saveFunction) => {
+    if (e.key === 'Enter') {
+      saveFunction();
+    } else if (e.key === 'Escape') {
+      if (saveFunction === saveTitle) {
+        cancelEditingTitle();
+      } else {
+        cancelEditingDescription();
+      }
+    }
+  };
+
   const getFeedbackMessage = () => {
     if (overallPercentage < 80) {
       return {
@@ -261,6 +351,12 @@ const Room = () => {
     return room?.participants?.some(p => p.user._id === friendId);
   };
 
+  // Verificar se o usuário é admin para permitir edição
+  const isAdmin = room?.participants?.some(p => 
+    p.user._id === user?._id && p.role === 'admin'
+  );
+  const canEdit = isAdmin;
+
   if (loading) {
     return (
       <Container>
@@ -299,8 +395,101 @@ const Room = () => {
             ← Voltar
           </BackButton>
           <RoomInfo>
-            <h1>{room.name}</h1>
-            <p>{room.description || 'Sem descrição'}</p>
+            <h1>
+              {editingTitle ? (
+                <div className="edit-input-container">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onBlur={saveTitle}
+                    onKeyPress={(e) => handleKeyPress(e, saveTitle)}
+                    autoFocus
+                    className="edit-input title-input"
+                    disabled={saving}
+                  />
+                  <div className="edit-actions">
+                    <button 
+                      onClick={saveTitle} 
+                      disabled={saving}
+                      className="save-btn"
+                      title="Salvar (Enter)"
+                    >
+                      {saving ? 'Salvando...' : '✓'}
+                    </button>
+                    <button 
+                      onClick={cancelEditingTitle}
+                      disabled={saving}
+                      className="cancel-btn"
+                      title="Cancelar (Esc)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="title-with-edit">
+                  <span>{room.name}</span>
+                  {canEdit && (
+                    <button 
+                      onClick={startEditingTitle}
+                      className="edit-icon-btn"
+                      title="Editar título"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </div>
+              )}
+            </h1>
+            <p>
+              {editingDescription ? (
+                <div className="edit-input-container">
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    onBlur={saveDescription}
+                    onKeyPress={(e) => handleKeyPress(e, saveDescription)}
+                    autoFocus
+                    className="edit-input description-input"
+                    placeholder="Digite uma descrição..."
+                    disabled={saving}
+                  />
+                  <div className="edit-actions">
+                    <button 
+                      onClick={saveDescription} 
+                      disabled={saving}
+                      className="save-btn"
+                      title="Salvar (Enter)"
+                    >
+                      {saving ? 'Salvando...' : '✓'}
+                    </button>
+                    <button 
+                      onClick={cancelEditingDescription}
+                      disabled={saving}
+                      className="cancel-btn"
+                      title="Cancelar (Esc)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="description-with-edit">
+                  <span>{room.description || 'Sem descrição'}</span>
+                  {canEdit && (
+                    <button 
+                      onClick={startEditingDescription}
+                      className="edit-icon-btn"
+                      title="Editar descrição"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </div>
+              )}
+            </p>
           </RoomInfo>
         </Header>
 
