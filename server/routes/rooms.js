@@ -108,9 +108,52 @@ router.get('/:roomId', auth, async (req, res) => {
     const overallPercentage = user.weeklyProgress.overallPercentage;
     const currentWeek = user.weeklyProgress.currentWeek;
 
+    // Buscar progresso de todos os participantes
+    const participantsWithProgress = await Promise.all(
+      room.participants.map(async (participant) => {
+        const participantUser = await User.findById(participant.user._id);
+        
+        if (!participantUser) {
+          return {
+            ...participant.toObject(),
+            progress: {
+              dailyPercentage: 0,
+              hasGoals: false,
+              goalsCount: 0
+            }
+          };
+        }
+
+        // Buscar metas ativas do participante para esta sala
+        const participantGoals = participantUser.individualGoals.filter(goal => 
+          goal.roomId.toString() === room._id.toString() && goal.isActive
+        );
+
+        // Buscar progresso diário do participante
+        const participantTodayProgress = participantUser.dailyProgress.find(progress => 
+          progress.roomId.toString() === room._id.toString() &&
+          progress.date.toDateString() === today.toDateString()
+        );
+
+        // Calcular progresso diário
+        const participantDailyPercentage = participantUser.calculateDailyCompletion(room._id, today);
+
+        return {
+          ...participant.toObject(),
+          progress: {
+            dailyPercentage: participantDailyPercentage,
+            hasGoals: participantGoals.length > 0,
+            goalsCount: participantGoals.length,
+            todayProgress: participantTodayProgress
+          }
+        };
+      })
+    );
+
     // Criar objeto de resposta com dados da sala e dados individuais do usuário
     const roomData = {
       ...room.toObject(),
+      participants: participantsWithProgress,
       userIndividualGoals: userGoals,
       userTodayProgress: userTodayProgress,
       userProgress: {
@@ -360,10 +403,19 @@ router.put('/:roomId', auth, async (req, res) => {
   }
 });
 
-// Convidar usuário para sala
+// Convidar usuário para sala (MELHORADO)
 router.post('/:roomId/invite', auth, async (req, res) => {
   try {
     const { friendCode, userId } = req.body;
+    
+    // Validação dos dados de entrada
+    if (!friendCode && !userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Forneça friendCode ou userId'
+      });
+    }
+    
     const room = await Room.findById(req.params.roomId);
     
     if (!room) {
@@ -381,28 +433,39 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     if (!isParticipant) {
       return res.status(403).json({
         success: false,
-        message: 'Acesso negado'
+        message: 'Acesso negado - você não é participante desta sala'
       });
     }
     
     let invitedUser;
     
     // Buscar usuário por código de amigo ou ID
-    if (friendCode) {
-      invitedUser = await User.findOne({ friendCode });
-    } else if (userId) {
-      invitedUser = await User.findById(userId);
-    } else {
-      return res.status(400).json({
+    try {
+      if (friendCode) {
+        invitedUser = await User.findOne({ friendCode: friendCode.toUpperCase() });
+      } else if (userId) {
+        invitedUser = await User.findById(userId);
+      }
+    } catch (searchError) {
+      console.error('Erro ao buscar usuário:', searchError);
+      return res.status(500).json({
         success: false,
-        message: 'Forneça friendCode ou userId'
+        message: 'Erro ao buscar usuário'
       });
     }
     
     if (!invitedUser) {
       return res.status(404).json({
         success: false,
-        message: 'Usuário não encontrado'
+        message: friendCode ? 'Código de amigo não encontrado' : 'Usuário não encontrado'
+      });
+    }
+    
+    // Verificar se não está tentando convidar a si mesmo
+    if (invitedUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Você não pode convidar a si mesmo'
       });
     }
     
@@ -418,10 +481,19 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
+    // Verificar limite de participantes (opcional)
+    if (room.participants.length >= 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sala atingiu o limite máximo de participantes'
+      });
+    }
+    
     // Adicionar usuário à sala
     room.participants.push({
       user: invitedUser._id,
-      role: 'member'
+      role: 'member',
+      joinedAt: new Date()
     });
     
     await room.save();
@@ -431,14 +503,24 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Usuário convidado com sucesso',
+      message: `${invitedUser.name} foi convidado com sucesso para a sala`,
       room
     });
   } catch (error) {
     console.error('Erro ao convidar usuário:', error);
+    
+    // Mensagens de erro mais específicas
+    let errorMessage = 'Erro interno do servidor';
+    
+    if (error.name === 'ValidationError') {
+      errorMessage = 'Dados inválidos para convite';
+    } else if (error.name === 'CastError') {
+      errorMessage = 'ID de sala inválido';
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Erro interno do servidor'
+      message: errorMessage
     });
   }
 });

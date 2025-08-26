@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRooms } from '../../hooks/useRooms';
 import { useFriends } from '../../hooks/useFriends';
+import { useToast } from '../../components/Toast';
 
 import { 
   Container, 
@@ -35,6 +36,7 @@ const Room = () => {
   const navigate = useNavigate();
   const { getRoom, addDailyGoals, completeGoal, inviteUser } = useRooms();
   const { friends, fetchFriends } = useFriends();
+  const { showSuccess, showError, showWarning } = useToast();
  
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +115,7 @@ const Room = () => {
     const validGoals = newGoals.filter(goal => goal.trim() !== '');
     
     if (validGoals.length === 0) {
-      alert('Adicione pelo menos uma meta!');
+      showWarning('Adicione pelo menos uma meta!');
       return;
     }
     
@@ -122,9 +124,11 @@ const Room = () => {
       if (result.success) {
         setNewGoals(['', '', '', '', '']);
         await loadRoom(); 
+        showSuccess('Metas semanais definidas com sucesso! 🎯');
       }
     } catch (err) {
       console.error('Erro ao definir metas semanais:', err);
+      showError('Erro ao definir metas semanais');
     }
   };
 
@@ -133,9 +137,12 @@ const Room = () => {
       const result = await completeGoal(roomId, goalId, completed);
       if (result.success) {
         await loadRoom(); 
+        const message = completed ? 'Meta concluída! 🎉' : 'Meta desmarcada';
+        showSuccess(message);
       }
     } catch (err) {
       console.error('Erro ao atualizar progresso:', err);
+      showError('Erro ao atualizar progresso');
     }
   };
 
@@ -146,14 +153,14 @@ const Room = () => {
     
     if (inviteMethod === 'friendCode') {
       if (!inviteFriendCode.trim()) {
-        alert('Digite o código do amigo!');
+        showWarning('Digite o código do amigo!');
         return;
       }
       inviteData = { friendCode: inviteFriendCode.trim() };
     } else if (inviteMethod === 'friendsList') {
       const selectedFriend = e.target.friendId?.value;
       if (!selectedFriend) {
-        alert('Selecione um amigo da lista!');
+        showWarning('Selecione um amigo da lista!');
         return;
       }
       inviteData = { userId: selectedFriend };
@@ -167,13 +174,13 @@ const Room = () => {
         setInviteFriendCode('');
         setShowInviteForm(false);
         await loadRoom(); 
-        alert('Usuário convidado com sucesso!');
+        showSuccess('Usuário convidado com sucesso! 👥');
       } else {
-        alert(result.message || 'Erro ao convidar usuário');
+        showError(result.message || 'Erro ao convidar usuário');
       }
     } catch (err) {
-      alert('Erro interno ao convidar usuário');
       console.error('Erro ao convidar usuário:', err);
+      showError('Erro interno ao convidar usuário');
     } finally {
       setInviting(false);
     }
@@ -186,13 +193,13 @@ const Room = () => {
       
       if (result.success) {
         await loadRoom(); 
-        alert('Amigo convidado com sucesso!');
+        showSuccess('Amigo convidado com sucesso! 👥');
       } else {
-        alert(result.message || 'Erro ao convidar amigo');
+        showError(result.message || 'Erro ao convidar amigo');
       }
     } catch (err) {
-      alert('Erro interno ao convidar amigo');
       console.error('Erro ao convidar amigo:', err);
+      showError('Erro interno ao convidar amigo');
     } finally {
       setInviting(false);
     }
@@ -242,10 +249,11 @@ const Room = () => {
     navigate('/my-rooms');
   };
 
-  const getParticipantProgress = () => {
-    // Como agora cada usuário tem suas próprias metas, precisamos buscar os dados individuais
-    // Por enquanto, vamos mostrar 0% até implementarmos a busca de progresso individual
-    // TODO: Implementar busca de progresso individual de cada participante
+  const getParticipantProgress = (participant) => {
+    // Agora usando os dados reais de progresso dos participantes
+    if (participant.progress && participant.progress.hasGoals) {
+      return participant.progress.dailyPercentage || 0;
+    }
     return 0;
   };
 
@@ -357,7 +365,7 @@ const Room = () => {
                   const isCompleted = todayProgress?.completedGoals?.find(
                     gp => gp.goalId === goal._id
                   )?.completed || false;
-                  
+                   
                   return (
                     <GoalItem key={goal._id || index}>
                       <label>
@@ -540,18 +548,26 @@ const Room = () => {
                       <span className="role">{participant.role === 'admin' ? 'Administrador' : 'Membro'}</span>
                     </div>
                   </div>
-                  
+                   
                   {weeklyGoals.length > 0 && (
                     <div className="progress-info">
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{ width: `${getParticipantProgress()}%` }}
-                        ></div>
-                      </div>
-                      <span className="progress-text">
-                        {Math.round(getParticipantProgress())}%
-                      </span>
+                      {participant.progress && participant.progress.hasGoals ? (
+                        <>
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-fill" 
+                              style={{ width: `${getParticipantProgress(participant)}%` }}
+                            ></div>
+                          </div>
+                          <span className="progress-text">
+                            {Math.round(getParticipantProgress(participant))}%
+                          </span>
+                        </>
+                      ) : (
+                        <div className="no-goals-indicator">
+                          <span className="no-goals-text">Sem metas</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </ParticipantCard>

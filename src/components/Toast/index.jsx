@@ -43,9 +43,7 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose, id }) => {
     }, 300); 
   }, [onClose]);
 
-  const handlePause = () => {
-   
-  };
+
 
   const handleResume = () => {
    
@@ -94,13 +92,7 @@ const Toast = ({ message, type = 'info', duration = 3000, onClose, id }) => {
       </div>
       
       <div className="toast-actions">
-        <button 
-          className="pause-btn" 
-          onClick={handlePause}
-          title="Pausar"
-        >
-          ⏸️
-        </button>
+        
         <button 
           className="close-btn" 
           onClick={handleClose}

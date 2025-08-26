@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRooms } from '../../hooks/useRooms';
+import { useToast } from '../Toast';
 import { 
   Container, 
   Header, 
@@ -29,6 +30,7 @@ import {
 const RoomsList = () => {
   const navigate = useNavigate();
   const { rooms, loading, error, fetchRooms, createRoom } = useRooms();
+  const { showSuccess, showError, showWarning } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -61,7 +63,7 @@ const RoomsList = () => {
     e.preventDefault();
     
     if (!formData.name.trim() || !formData.description.trim()) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      showWarning('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -72,13 +74,13 @@ const RoomsList = () => {
       
       if (result.success) {
         handleCloseModal();
-
+        showSuccess('Sala criada com sucesso! 🎉');
         navigate(`/room/${result.room._id}`);
       } else {
-        alert(result.message || 'Erro ao criar sala');
+        showError(result.message || 'Erro ao criar sala');
       }
     } catch (err) {
-      alert('Erro interno ao criar sala');
+      showError('Erro interno ao criar sala');
       console.error('Erro ao criar sala:', err);
     } finally {
       setCreating(false);
