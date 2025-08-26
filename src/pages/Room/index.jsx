@@ -77,17 +77,12 @@ const Room = () => {
   };
 
   const loadRoomData = (roomData) => {
-    
-    const activeGoals = roomData.weeklyGoals?.filter(goal => goal.isActive) || [];
+    // Usar metas individuais do usuário em vez das metas globais da sala
+    const activeGoals = roomData.userIndividualGoals?.filter(goal => goal.isActive) || [];
     setWeeklyGoals(activeGoals);
     
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todayProgressData = roomData.dailyProgress?.find(progress => 
-      new Date(progress.date).toDateString() === today.toDateString()
-    );
+    // Usar progresso individual do usuário
+    const todayProgressData = roomData.userTodayProgress;
     
     if (todayProgressData) {
       setTodayProgress(todayProgressData);
@@ -97,12 +92,13 @@ const Room = () => {
       setDailyPercentage(0);
     }
     
+    // Usar progresso individual do usuário
+    setOverallPercentage(roomData.userProgress?.overallPercentage || 0);
+    setCurrentWeek(roomData.userProgress?.currentWeek || 1);
     
-    setOverallPercentage(roomData.weeklyProgress?.overallPercentage || 0);
-    setCurrentWeek(roomData.weeklyProgress?.currentWeek || 1);
-    
-
-    if ((today.getDay() === 0 || today.getDay() === 6) && overallPercentage > 0) {
+    // Mostrar feedback nos fins de semana se houver progresso
+    const today = new Date();
+    if ((today.getDay() === 0 || today.getDay() === 6) && (roomData.userProgress?.overallPercentage || 0) > 0) {
       setShowFeedback(true);
     }
   };
@@ -246,14 +242,11 @@ const Room = () => {
     navigate('/my-rooms');
   };
 
-  const getParticipantProgress = (participant) => {
-    if (!todayProgress || !weeklyGoals.length) return 0;
-    
-    const participantProgress = todayProgress.completedGoals?.filter(
-      gp => gp.completed && gp.userId === participant.user._id
-    ).length || 0;
-    
-    return (participantProgress / weeklyGoals.length) * 100;
+  const getParticipantProgress = () => {
+    // Como agora cada usuário tem suas próprias metas, precisamos buscar os dados individuais
+    // Por enquanto, vamos mostrar 0% até implementarmos a busca de progresso individual
+    // TODO: Implementar busca de progresso individual de cada participante
+    return 0;
   };
 
   const isFriendAlreadyInRoom = (friendId) => {
@@ -553,11 +546,11 @@ const Room = () => {
                       <div className="progress-bar">
                         <div 
                           className="progress-fill" 
-                          style={{ width: `${getParticipantProgress(participant)}%` }}
+                          style={{ width: `${getParticipantProgress()}%` }}
                         ></div>
                       </div>
                       <span className="progress-text">
-                        {Math.round(getParticipantProgress(participant))}%
+                        {Math.round(getParticipantProgress())}%
                       </span>
                     </div>
                   )}

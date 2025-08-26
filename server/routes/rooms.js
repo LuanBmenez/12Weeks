@@ -5,7 +5,7 @@ import { auth } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
+// Criar nova sala
 router.post('/create', auth, async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -22,7 +22,7 @@ router.post('/create', auth, async (req, res) => {
     
     await room.save();
     
-    
+    // Popular dados do criador
     await room.populate('creator', 'name email');
     
     res.status(201).json({
@@ -38,7 +38,7 @@ router.post('/create', auth, async (req, res) => {
   }
 });
 
-
+// Listar minhas salas
 router.get('/my-rooms', auth, async (req, res) => {
   try {
     const rooms = await Room.find({
@@ -62,7 +62,7 @@ router.get('/my-rooms', auth, async (req, res) => {
   }
 });
 
-
+// Obter detalhes de uma sala
 router.get('/:roomId', auth, async (req, res) => {
   try {
     const room = await Room.findById(req.params.roomId)
@@ -76,7 +76,7 @@ router.get('/:roomId', auth, async (req, res) => {
       });
     }
     
-    
+    // Verificar se o usuário é participante da sala
     const isParticipant = room.participants.some(
       p => p.user._id.toString() === req.user._id.toString()
     );
@@ -87,10 +87,43 @@ router.get('/:roomId', auth, async (req, res) => {
         message: 'Acesso negado'
       });
     }
-    
+
+    // Buscar metas individuais do usuário para esta sala
+    const user = await User.findById(req.user._id);
+    const userGoals = user.individualGoals.filter(goal => 
+      goal.roomId.toString() === room._id.toString() && goal.isActive
+    );
+
+    // Buscar progresso diário do usuário para esta sala
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const userTodayProgress = user.dailyProgress.find(progress => 
+      progress.roomId.toString() === room._id.toString() &&
+      progress.date.toDateString() === today.toDateString()
+    );
+
+    // Calcular progresso individual
+    const dailyPercentage = user.calculateDailyCompletion(room._id, today);
+    const weeklyPercentage = user.calculateWeeklyProgress(room._id);
+    const overallPercentage = user.weeklyProgress.overallPercentage;
+    const currentWeek = user.weeklyProgress.currentWeek;
+
+    // Criar objeto de resposta com dados da sala e dados individuais do usuário
+    const roomData = {
+      ...room.toObject(),
+      userIndividualGoals: userGoals,
+      userTodayProgress: userTodayProgress,
+      userProgress: {
+        dailyPercentage,
+        weeklyPercentage,
+        overallPercentage,
+        currentWeek
+      }
+    };
+
     res.json({
       success: true,
-      room
+      room: roomData
     });
   } catch (error) {
     console.error('Erro ao buscar sala:', error);
@@ -101,7 +134,7 @@ router.get('/:roomId', auth, async (req, res) => {
   }
 });
 
-
+// Definir metas semanais individuais
 router.post('/:roomId/weekly-goals', auth, async (req, res) => {
   try {
     const { goals } = req.body;
@@ -114,7 +147,7 @@ router.post('/:roomId/weekly-goals', auth, async (req, res) => {
       });
     }
     
-    
+    // Verificar se o usuário é participante da sala
     const isParticipant = room.participants.some(
       p => p.user.toString() === req.user._id.toString()
     );
@@ -126,44 +159,51 @@ router.post('/:roomId/weekly-goals', auth, async (req, res) => {
       });
     }
     
-    
+    // Verificar se o usuário já tem metas para esta semana nesta sala
     const today = new Date();
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay());
     
-    const hasGoalsThisWeek = room.weeklyGoals.some(goal => {
-      const goalDate = new Date(goal.createdAt);
-      return goalDate >= weekStart && goal.isActive;
-    });
+    const user = await User.findById(req.user._id);
+    const hasGoalsThisWeek = user.individualGoals.some(goal => 
+      goal.roomId.toString() === room._id.toString() &&
+      goal.createdAt >= weekStart && 
+      goal.isActive
+    );
     
     if (hasGoalsThisWeek) {
       return res.status(400).json({
         success: false,
-        message: 'Metas já foram definidas para esta semana'
+        message: 'Você já definiu metas para esta semana nesta sala'
       });
     }
     
-    
+    // Criar metas individuais para o usuário
     const newGoals = goals.slice(0, 5).map(goalText => ({
+      roomId: room._id,
       text: goalText,
       isActive: true
     }));
     
-    room.weeklyGoals.push(...newGoals);
+    user.individualGoals.push(...newGoals);
     
-    
+    // Criar progresso diário para hoje
     const todayProgress = {
+      roomId: room._id,
       date: today,
       completedGoals: newGoals.map((_, index) => ({
-        goalId: room.weeklyGoals[room.weeklyGoals.length - newGoals.length + index]._id,
+        goalId: user.individualGoals[user.individualGoals.length - newGoals.length + index]._id,
         completed: false
       })),
       dailyPercentage: 0
     };
     
-    room.dailyProgress.push(todayProgress);
+    user.dailyProgress.push(todayProgress);
     
-    await room.save();
+    // Calcular progresso diário
+    user.calculateDailyCompletion(room._id, today);
+    
+    await user.save();
     
     res.json({
       success: true,
@@ -179,7 +219,7 @@ router.post('/:roomId/weekly-goals', auth, async (req, res) => {
   }
 });
 
-
+// Atualizar progresso diário individual
 router.put('/:roomId/daily-progress/:goalId', auth, async (req, res) => {
   try {
     const { completed } = req.body;
@@ -192,7 +232,7 @@ router.put('/:roomId/daily-progress/:goalId', auth, async (req, res) => {
       });
     }
     
-    
+    // Verificar se o usuário é participante da sala
     const isParticipant = room.participants.some(
       p => p.user.toString() === req.user._id.toString()
     );
@@ -203,30 +243,36 @@ router.put('/:roomId/daily-progress/:goalId', auth, async (req, res) => {
         message: 'Acesso negado'
       });
     }
-    
+
+    const user = await User.findById(req.user._id);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    
-    let todayProgress = room.dailyProgress.find(progress => 
+    // Buscar ou criar progresso diário para o usuário nesta sala
+    let todayProgress = user.dailyProgress.find(progress => 
+      progress.roomId.toString() === room._id.toString() &&
       progress.date.toDateString() === today.toDateString()
     );
     
     if (!todayProgress) {
-
+      // Buscar metas ativas do usuário para esta sala
+      const roomGoals = user.individualGoals.filter(goal => 
+        goal.roomId.toString() === room._id.toString() && goal.isActive
+      );
+      
       todayProgress = {
+        roomId: room._id,
         date: today,
-        completedGoals: room.weeklyGoals.filter(goal => goal.isActive).map(goal => ({
+        completedGoals: roomGoals.map(goal => ({
           goalId: goal._id,
-          userId: req.user._id,
           completed: false
         })),
         dailyPercentage: 0
       };
-      room.dailyProgress.push(todayProgress);
+      user.dailyProgress.push(todayProgress);
     }
     
-    
+    // Atualizar o status da meta específica
     const goalProgress = todayProgress.completedGoals.find(
       gp => gp.goalId.toString() === req.params.goalId
     );
@@ -235,22 +281,22 @@ router.put('/:roomId/daily-progress/:goalId', auth, async (req, res) => {
       goalProgress.completed = completed;
     }
     
+    // Calcular progresso diário individual
+    user.calculateDailyCompletion(room._id, today);
     
-    room.calculateDailyCompletion(today);
+    // Calcular progresso semanal individual
+    user.calculateWeeklyProgress(room._id);
     
+    // Verificar avanço de semana individual
+    user.checkWeekAdvance(room._id);
     
-    room.calculateWeeklyProgress();
-    
-    
-    room.checkWeekAdvance();
-    
-    await room.save();
+    await user.save();
     
     res.json({
       success: true,
       message: 'Progresso atualizado com sucesso',
       todayProgress,
-      weeklyProgress: room.weeklyProgress
+      weeklyProgress: user.weeklyProgress
     });
   } catch (error) {
     console.error('Erro ao atualizar progresso:', error);
@@ -261,7 +307,7 @@ router.put('/:roomId/daily-progress/:goalId', auth, async (req, res) => {
   }
 });
 
-
+// Editar sala (apenas admin)
 router.put('/:roomId', auth, async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -274,7 +320,7 @@ router.put('/:roomId', auth, async (req, res) => {
       });
     }
     
-    
+    // Verificar se o usuário é admin da sala
     const isAdmin = room.participants.some(
       p => p.user.toString() === req.user._id.toString() && p.role === 'admin'
     );
@@ -286,7 +332,7 @@ router.put('/:roomId', auth, async (req, res) => {
       });
     }
     
-    
+    // Atualizar campos
     if (name !== undefined) {
       room.name = name.trim();
     }
@@ -297,7 +343,7 @@ router.put('/:roomId', auth, async (req, res) => {
     
     await room.save();
     
-    
+    // Popular dados atualizados
     await room.populate('creator', 'name email');
     await room.populate('participants.user', 'name email');
     
@@ -314,8 +360,7 @@ router.put('/:roomId', auth, async (req, res) => {
   }
 });
 
-
-
+// Convidar usuário para sala
 router.post('/:roomId/invite', auth, async (req, res) => {
   try {
     const { friendCode, userId } = req.body;
@@ -328,7 +373,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
-   
+    // Verificar se o usuário é participante da sala
     const isParticipant = room.participants.some(
       p => p.user.toString() === req.user._id.toString()
     );
@@ -342,7 +387,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     
     let invitedUser;
     
-    
+    // Buscar usuário por código de amigo ou ID
     if (friendCode) {
       invitedUser = await User.findOne({ friendCode });
     } else if (userId) {
@@ -361,7 +406,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
-    
+    // Verificar se já é participante
     const alreadyParticipant = room.participants.some(
       p => p.user.toString() === invitedUser._id.toString()
     );
@@ -373,7 +418,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
       });
     }
     
-    
+    // Adicionar usuário à sala
     room.participants.push({
       user: invitedUser._id,
       role: 'member'
@@ -381,7 +426,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     
     await room.save();
     
-    
+    // Popular dados dos participantes
     await room.populate('participants.user', 'name email profilePicture');
     
     res.json({
@@ -399,4 +444,3 @@ router.post('/:roomId/invite', auth, async (req, res) => {
 });
 
 export default router;
-
