@@ -202,24 +202,14 @@ router.post('/:roomId/weekly-goals', auth, async (req, res) => {
       });
     }
     
-    // Verificar se o usuário já tem metas para esta semana nesta sala
-    const today = new Date();
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay());
-    
     const user = await User.findById(req.user._id);
-    const hasGoalsThisWeek = user.individualGoals.some(goal => 
-      goal.roomId.toString() === room._id.toString() &&
-      goal.createdAt >= weekStart && 
-      goal.isActive
-    );
     
-    if (hasGoalsThisWeek) {
-      return res.status(400).json({
-        success: false,
-        message: 'Você já definiu metas para esta semana nesta sala'
-      });
-    }
+    // Desativar metas antigas para esta sala antes de criar novas
+    user.individualGoals.forEach(goal => {
+      if (goal.roomId.toString() === room._id.toString() && goal.isActive) {
+        goal.isActive = false;
+      }
+    });
     
     // Criar metas individuais para o usuário
     const newGoals = goals.slice(0, 5).map(goalText => ({

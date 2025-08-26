@@ -211,7 +211,7 @@ export const SkeletonExample = () => {
         </ul>
       </div>
       
-      {/* Botão para testar novamente */}
+      { Botão para testar novamente */}
       <button 
         onClick={handleReset}
         style={{ 

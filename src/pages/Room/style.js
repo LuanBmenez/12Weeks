@@ -251,6 +251,42 @@ export const GoalsForm = styled.div`
 `;
 
 export const GoalsList = styled.div`
+  .goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    h3 {
+      margin: 0;
+      color: #1e293b;
+    }
+    
+    .edit-goals-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      &:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+      }
+      
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+  
   h3 {
     margin: 0 0 1.5rem 0;
     color: #1e293b;

@@ -134,7 +134,7 @@ const Room = () => {
       if (result.success) {
         setNewGoals(['', '', '', '', '']);
         await loadRoom(); 
-        showSuccess('Metas semanais definidas com sucesso! 🎯');
+        showSuccess('Metas semanais atualizadas com sucesso! 🎯');
       }
     } catch (err) {
       console.error('Erro ao definir metas semanais:', err);
@@ -530,8 +530,8 @@ const Room = () => {
               <GoalsForm>
                 <h3>Defina suas metas para esta semana (máximo 5):</h3>
                 <p className="info">
-                  <strong>Importante:</strong> Estas metas ficarão fixas por 7 dias e continuarão automaticamente 
-                  se você não as modificar. O objetivo é criar constância por 12 semanas!
+                  <strong>Importante:</strong> Você pode alterar suas metas a qualquer momento! 
+                  O objetivo é criar constância e flexibilidade por 12 semanas.
                 </p>
                 {newGoals.map((goal, index) => (
                   <input
@@ -549,7 +549,18 @@ const Room = () => {
               </GoalsForm>
             ) : (
               <GoalsList>
-                <h3>Metas desta semana:</h3>
+                <div className="goals-header">
+                  <h3>Metas desta semana:</h3>
+                  <button 
+                    className="edit-goals-btn"
+                    onClick={() => {
+                      setNewGoals(weeklyGoals.map(goal => goal.text).concat(['', '', '', '', '']).slice(0, 5));
+                      setWeeklyGoals([]);
+                    }}
+                  >
+                    ✏️ Editar Metas
+                  </button>
+                </div>
                 {weeklyGoals.map((goal, index) => {
                   const isCompleted = todayProgress?.completedGoals?.find(
                     gp => gp.goalId === goal._id
