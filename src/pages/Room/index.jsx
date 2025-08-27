@@ -61,7 +61,7 @@ const Room = () => {
   const [roomGoals, setRoomGoals] = useState([]);
   const [roomGoalProgress, setRoomGoalProgress] = useState(0);
   
-  // Estados para expansão/colapso
+  
   const [expandedIndividualGoals, setExpandedIndividualGoals] = useState(true);
   const [expandedRoomGoals, setExpandedRoomGoals] = useState(true);
   
@@ -120,7 +120,7 @@ const Room = () => {
     setOverallPercentage(roomData.userProgress?.overallPercentage || 0);
     setCurrentWeek(roomData.userProgress?.currentWeek || 1);
     
-    // Carregar metas da sala
+  
     const activeRoomGoals = roomData.roomGoals || [];
     setRoomGoals(activeRoomGoals);
     setRoomGoalProgress(roomData.roomGoalProgress || 0);
@@ -525,7 +525,7 @@ const Room = () => {
                 </div>
               )}
             </h1>
-            <p>
+            <div>
               {editingDescription ? (
                 <div className="edit-input-container">
                   <input
@@ -572,12 +572,12 @@ const Room = () => {
                   )}
                 </div>
               )}
-            </p>
+            </div>
           </RoomInfo>
         </Header>
 
         <Content>
-          {/* Seção de Metas da Sala */}
+          
           <GoalsSection className="modern-goals">
             <div className="goals-card-header">
               <div className="header-left">
@@ -611,7 +611,7 @@ const Room = () => {
                         <strong>Administrador:</strong> Estas metas serão visíveis para todos os participantes 
                         e cada um poderá marcar seu progresso individual.
                         <br/><br/>
-                        <strong>⚡ Importante:</strong> As metas da sala <u>contribuem para o progresso individual</u> 
+                        <strong>⚡ Importante:</strong> As metas da sala <u>contribuem para o progresso individual </u> 
                         de cada participante, afetando tanto o progresso diário quanto o progresso das 12 semanas.
                       </p>
                       {newRoomGoals.map((goal, index) => (
@@ -661,9 +661,9 @@ const Room = () => {
                               <input
                                 type="checkbox"
                                 checked={isCompleted}
-                                onChange={() => {}} // Controlado pelo onClick do card
+                                onChange={() => {}}
                                 className="goal-checkbox"
-                                tabIndex={-1} // Remove do tab navigation
+                                tabIndex={-1} 
                               />
                               <div className={`status-indicator ${isCompleted ? 'completed' : 'pending'}`}>
                                 {isCompleted ? '✓' : '○'}
@@ -778,9 +778,9 @@ const Room = () => {
                               <input
                                 type="checkbox"
                                 checked={isCompleted}
-                                onChange={() => {}} // Controlado pelo onClick do card
+                                onChange={() => {}} 
                                 className="goal-checkbox"
-                                tabIndex={-1} // Remove do tab navigation
+                                tabIndex={-1} 
                               />
                               <div className={`status-indicator ${isCompleted ? 'completed' : 'pending'}`}>
                                 {isCompleted ? '✓' : '○'}
@@ -875,16 +875,25 @@ const Room = () => {
           </ProgressSection>
 
           
-          <ParticipantsSection>
-            <ParticipantsHeader>
-              <h2>Participantes da Sala</h2>
-              <button 
-                className="invite-button"
-                onClick={() => setShowInviteForm(!showInviteForm)}
-              >
-                + Convidar Amigo
-              </button>
-            </ParticipantsHeader>
+          <ParticipantsSection className="modern-participants">
+            <div className="participants-card-header">
+              <div className="header-left">
+                <div className="participants-icon">👥</div>
+                <div className="participants-info">
+                  <h2>Participantes</h2>
+                  <span className="participants-subtitle">{room?.participants?.length || 0} membros</span>
+                </div>
+              </div>
+              <div className="header-right">
+                <button 
+                  className="invite-button modern"
+                  onClick={() => setShowInviteForm(!showInviteForm)}
+                >
+                  <span className="btn-icon">+</span>
+                  Convidar
+                </button>
+              </div>
+            </div>
 
             {showInviteForm && (
               <InviteSection>
@@ -983,62 +992,71 @@ const Room = () => {
               </InviteSection>
             )}
 
-            <ParticipantsList>
+            <div className="modern-participants-grid">
               {room.participants?.map((participant) => (
-                <ParticipantCard key={participant.user._id}>
-                  <div className="participant-main">
+                <div key={participant.user._id} className="participant-card-modern">
+                  <div className="participant-header">
+                    <div className="participant-avatar">
+                      {participant.user.profilePicture ? (
+                        <img 
+                          src={participant.user.profilePicture} 
+                          alt={participant.user.name}
+                        />
+                      ) : (
+                        <div className="initials">
+                          {participant.user.name
+                            .split(' ')
+                            .map(word => word.charAt(0))
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2)
+                          }
+                        </div>
+                      )}
+                    </div>
                     <div className="participant-info">
-                      <div className="avatar">
-                        {participant.user.profilePicture ? (
-                          <img 
-                            src={participant.user.profilePicture} 
-                            alt={participant.user.name}
-                          />
-                        ) : (
-                          <div className="initials">
-                            {participant.user.name
-                              .split(' ')
-                              .map(word => word.charAt(0))
-                              .join('')
-                              .toUpperCase()
-                              .slice(0, 2)
-                            }
-                          </div>
-                        )}
-                      </div>
-                      <div className="details">
-                        <h4>{participant.user.name}</h4>
-                        <span className="role">{participant.role === 'admin' ? 'Administrador' : 'Membro'}</span>
+                      <h4>{participant.user.name}</h4>
+                      <div className="participant-badges">
+                        <span className={`role-badge ${participant.role}`}>
+                          {participant.role === 'admin' ? '👑 Admin' : '👤 Membro'}
+                        </span>
                       </div>
                     </div>
+                  </div>
                      
-                    {weeklyGoals.length > 0 && (
-                      <div 
-                        className={`progress-info ${participant.progress && participant.progress.hasGoals ? 'clickable' : ''}`}
-                        onClick={() => participant.progress && participant.progress.hasGoals && toggleParticipantExpansion(participant.user._id)}
-                      >
-                        {participant.progress && participant.progress.hasGoals ? (
-                          <>
-                            <div className="progress-bar">
-                              <div 
-                                className="progress-fill" 
-                                style={{ width: `${getParticipantProgress(participant)}%` }}
-                              ></div>
-                            </div>
-                            <div className="progress-text-container">
-                              <span className="progress-text">
-                                {Math.round(getParticipantProgress(participant))}%
-                              </span>
+                  <div className="participant-progress">
+                    {weeklyGoals.length > 0 ? (
+                      participant.progress && participant.progress.hasGoals ? (
+                        <div 
+                          className="progress-section clickable"
+                          onClick={() => toggleParticipantExpansion(participant.user._id)}
+                        >
+                          <div className="progress-header">
+                            <span className="progress-label">Progresso de hoje</span>
+                            <div className="progress-value">
+                              <span className="percentage">{Math.round(getParticipantProgress(participant))}%</span>
                               <span className={`expand-arrow ${expandedParticipants.has(participant.user._id) ? 'expanded' : ''}`}>
                                 ▼
                               </span>
                             </div>
-                          </>
-                        ) : (
-                          <div className="no-goals-indicator">
-                            <span className="no-goals-text">Sem metas</span>
                           </div>
-                        )}
+                          <div className="progress-bar-modern">
+                            <div 
+                              className="progress-fill-modern" 
+                              style={{ width: `${getParticipantProgress(participant)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="no-progress">
+                          <span className="no-progress-icon">📝</span>
+                          <span className="no-progress-text">Sem metas definidas</span>
+                        </div>
+                      )
+                    ) : (
+                      <div className="no-progress">
+                        <span className="no-progress-icon">⏳</span>
+                        <span className="no-progress-text">Aguardando metas</span>
                       </div>
                     )}
                   </div>
@@ -1070,9 +1088,9 @@ const Room = () => {
                       </div>
                     </div>
                   )}
-                </ParticipantCard>
+                </div>
               ))}
-            </ParticipantsList>
+            </div>
           </ParticipantsSection>
 
          

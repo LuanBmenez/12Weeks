@@ -240,12 +240,19 @@ roomSchema.methods.calculateRoomGoalProgress = function(date) {
   let totalCompletions = 0;
   let totalPossibleCompletions = activeRoomGoals.length * participants.length;
   
+
+  
   activeRoomGoals.forEach(goal => {
     participants.forEach(participant => {
+      // Fix: Garantir que estamos comparando ObjectIds corretamente
+      const participantUserId = participant.user._id ? participant.user._id.toString() : participant.user.toString();
+      
       const completion = roomProgressEntry.completedGoals.find(
         cg => cg.goalId.toString() === goal._id.toString() && 
-             cg.userId.toString() === participant.user.toString()
+             cg.userId.toString() === participantUserId
       );
+      
+
       
       if (completion && completion.completed) {
         totalCompletions++;

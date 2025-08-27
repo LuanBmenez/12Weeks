@@ -1,7 +1,12 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
+  height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   padding: 24px;
+  margin: -24px;
+  padding: 48px 24px 24px 24px;
+  border-radius: 18px;
 `;
 
 export const Header = styled.div`
@@ -11,6 +16,30 @@ export const Header = styled.div`
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+  
+  .back-button {
+    background: #64748b;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    &:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
 `;
 
 export const Title = styled.h1`

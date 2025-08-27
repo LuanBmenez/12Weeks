@@ -1,25 +1,46 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { useRooms } from '../../hooks/useRooms';
+import { useUserStats } from '../../hooks/useUserStats';
 import DashboardHeader from "../../components/DashboardHeader";
-import WelcomeSection from "../../components/WelcomeSection";
+import StatsCards from "../../components/StatsCards";
 import QuickActions from "../../components/QuickActions";
-
 import CreateRoomModal from "../../components/CreateRoomModal";
 import {
   Container,
   Main,
+  WelcomeSection,
+  WelcomeTitle,
+  WelcomeSubtitle,
+  StatsSection
 } from "./style";
 
 export default function Dashboard() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { createRoom } = useRooms();
+  const userStats = useUserStats();
   const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
 
   const handleCreateRoom = async (roomData) => {
     const result = await createRoom(roomData);
     if (result.success) {
       setIsCreateRoomModalOpen(false);
+      // Refresh stats after creating room
+      userStats.refreshStats();
+    }
+  };
+
+  const pageVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+        staggerChildren: 0.1
+      }
     }
   };
 
@@ -27,11 +48,34 @@ export default function Dashboard() {
     <Container>
       <DashboardHeader onLogout={logout} />
       
-      <Main>
-        <WelcomeSection />
-        <QuickActions onCreateRoom={() => setIsCreateRoomModalOpen(true)} />
+      <motion.div
+        variants={pageVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Main>
+          <WelcomeSection>
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <WelcomeTitle>
+                Olá, {user?.name?.split(' ')[0] || 'Usuário'}! 👋
+              </WelcomeTitle>
+              <WelcomeSubtitle>
+                Acompanhe seu progresso e alcance suas metas em 12 semanas
+              </WelcomeSubtitle>
+            </motion.div>
+          </WelcomeSection>
 
-      </Main>
+          <StatsSection>
+            <StatsCards userStats={userStats} />
+          </StatsSection>
+          
+          <QuickActions onCreateRoom={() => setIsCreateRoomModalOpen(true)} />
+        </Main>
+      </motion.div>
 
       <CreateRoomModal
         isOpen={isCreateRoomModalOpen}
