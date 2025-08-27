@@ -210,20 +210,47 @@ userSchema.methods.toJSON = function() {
 };
 
 
-userSchema.methods.calculateDailyCompletion = function(roomId, date) {
+userSchema.methods.calculateDailyCompletion = function(roomId, date, roomData = null) {
   const dailyProgress = this.dailyProgress.find(progress => 
     progress.roomId.toString() === roomId.toString() &&
     progress.date.toDateString() === date.toDateString()
   );
   
   if (dailyProgress) {
-    const roomGoals = this.individualGoals.filter(goal => 
+    
+    const individualGoals = this.individualGoals.filter(goal => 
       goal.roomId.toString() === roomId.toString() && goal.isActive
     );
     
-    if (roomGoals.length > 0) {
-      const completed = dailyProgress.completedGoals.filter(goal => goal.completed).length;
-      dailyProgress.dailyPercentage = (completed / roomGoals.length) * 100;
+    const completedIndividualGoals = dailyProgress.completedGoals.filter(goal => goal.completed).length;
+    
+    
+    let completedRoomGoals = 0;
+    let totalRoomGoals = 0;
+    
+    if (roomData && roomData.roomGoals) {
+      const activeRoomGoals = roomData.roomGoals.filter(goal => goal.isActive);
+      totalRoomGoals = activeRoomGoals.length;
+      
+      const roomTodayProgress = roomData.roomDailyProgress?.find(progress => 
+        progress.date.toDateString() === date.toDateString()
+      );
+      
+      if (roomTodayProgress) {
+        completedRoomGoals = roomTodayProgress.completedGoals.filter(
+          cg => cg.userId.toString() === this._id.toString() && cg.completed
+        ).length;
+      }
+    }
+    
+    
+    const totalGoals = individualGoals.length + totalRoomGoals;
+    const totalCompleted = completedIndividualGoals + completedRoomGoals;
+    
+    if (totalGoals > 0) {
+      dailyProgress.dailyPercentage = (totalCompleted / totalGoals) * 100;
+    } else {
+      dailyProgress.dailyPercentage = 0;
     }
   }
   

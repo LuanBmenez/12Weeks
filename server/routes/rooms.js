@@ -103,7 +103,7 @@ router.get('/:roomId', auth, async (req, res) => {
     );
 
     
-    const dailyPercentage = user.calculateDailyCompletion(room._id, today);
+    const dailyPercentage = user.calculateDailyCompletion(room._id, today, room);
     const weeklyPercentage = user.calculateWeeklyProgress(room._id);
     const overallPercentage = user.weeklyProgress.overallPercentage;
     const currentWeek = user.weeklyProgress.currentWeek;
@@ -136,9 +136,9 @@ router.get('/:roomId', auth, async (req, res) => {
         );
 
         
-        const participantDailyPercentage = participantUser.calculateDailyCompletion(room._id, today);
+        const participantDailyPercentage = participantUser.calculateDailyCompletion(room._id, today, room);
 
-        // Combinar metas com status de conclusão
+       
         const goalsWithStatus = participantGoals.map(goal => {
           const goalProgress = participantTodayProgress?.completedGoals?.find(
             gp => gp.goalId.toString() === goal._id.toString()
@@ -164,6 +164,27 @@ router.get('/:roomId', auth, async (req, res) => {
     );
 
     
+    const activeRoomGoals = room.roomGoals.filter(goal => goal.isActive);
+    const todayRoomProgress = room.roomDailyProgress.find(progress => 
+      progress.date.toDateString() === today.toDateString()
+    );
+    
+    
+    const roomGoalsWithUserProgress = activeRoomGoals.map(goal => {
+      const userCompletion = todayRoomProgress?.completedGoals?.find(
+        cg => cg.goalId.toString() === goal._id.toString() && 
+             cg.userId.toString() === req.user._id.toString()
+      );
+      
+      return {
+        ...goal.toObject(),
+        userCompleted: userCompletion?.completed || false
+      };
+    });
+    
+    
+    const roomGoalProgress = room.calculateRoomGoalProgress(today);
+    
     const roomData = {
       ...room.toObject(),
       participants: participantsWithProgress,
@@ -174,7 +195,10 @@ router.get('/:roomId', auth, async (req, res) => {
         weeklyPercentage,
         overallPercentage,
         currentWeek
-      }
+      },
+      roomGoals: roomGoalsWithUserProgress,
+      roomTodayProgress: todayRoomProgress,
+      roomGoalProgress: roomGoalProgress
     };
 
     res.json({
@@ -233,7 +257,7 @@ router.post('/:roomId/weekly-goals', auth, async (req, res) => {
     
     user.individualGoals.push(...newGoals);
     
-    // Criar progresso diário para hoje
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -250,7 +274,7 @@ router.post('/:roomId/weekly-goals', auth, async (req, res) => {
     user.dailyProgress.push(todayProgress);
     
     
-    user.calculateDailyCompletion(room._id, today);
+    user.calculateDailyCompletion(room._id, today, room);
     
     await user.save();
     
@@ -331,7 +355,7 @@ router.put('/:roomId/daily-progress/:goalId', auth, async (req, res) => {
     }
     
 
-    user.calculateDailyCompletion(room._id, today);
+    user.calculateDailyCompletion(room._id, today, room);
     
 
     user.calculateWeeklyProgress(room._id);
@@ -576,6 +600,171 @@ router.delete('/:roomId', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao deletar sala:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+
+router.post('/:roomId/room-goals', auth, async (req, res) => {
+  try {
+    const { goals } = req.body;
+    const room = await Room.findById(req.params.roomId);
+    
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sala não encontrada'
+      });
+    }
+    
+
+    const isAdmin = room.participants.some(
+      p => p.user.toString() === req.user._id.toString() && p.role === 'admin'
+    );
+    
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Apenas administradores podem definir metas da sala'
+      });
+    }
+    
+
+    room.roomGoals.forEach(goal => {
+      if (goal.isActive) {
+        goal.isActive = false;
+      }
+    });
+    
+
+    const newRoomGoals = goals.slice(0, 5).map(goalText => ({
+      text: goalText,
+      createdBy: req.user._id,
+      isActive: true
+    }));
+    
+    room.roomGoals.push(...newRoomGoals);
+    
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    
+    let todayRoomProgress = room.roomDailyProgress.find(progress => 
+      progress.date.toDateString() === today.toDateString()
+    );
+    
+    if (!todayRoomProgress) {
+      todayRoomProgress = {
+        date: today,
+        completedGoals: [],
+        dailyPercentage: 0
+      };
+      room.roomDailyProgress.push(todayRoomProgress);
+    }
+    
+
+    room.participants.forEach(participant => {
+      newRoomGoals.forEach(goal => {
+        const goalId = room.roomGoals[room.roomGoals.length - newRoomGoals.length + newRoomGoals.indexOf(goal)]._id;
+        const existingCompletion = todayRoomProgress.completedGoals.find(
+          cg => cg.goalId.toString() === goalId.toString() && 
+               cg.userId.toString() === participant.user.toString()
+        );
+        
+        if (!existingCompletion) {
+          todayRoomProgress.completedGoals.push({
+            goalId: goalId,
+            userId: participant.user,
+            completed: false
+          });
+        }
+      });
+    });
+    
+    
+    room.calculateRoomGoalProgress(today);
+    
+    await room.save();
+    
+    
+    for (const participant of room.participants) {
+      const user = await User.findById(participant.user);
+      if (user) {
+        user.calculateDailyCompletion(room._id, today, room);
+        user.calculateWeeklyProgress(room._id);
+        await user.save();
+      }
+    }
+    
+    res.json({
+      success: true,
+      roomGoals: newRoomGoals,
+      todayRoomProgress
+    });
+  } catch (error) {
+    console.error('Erro ao definir metas da sala:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+
+router.put('/:roomId/room-goals/:goalId', auth, async (req, res) => {
+  try {
+    const { completed } = req.body;
+    const room = await Room.findById(req.params.roomId);
+    
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: 'Sala não encontrada'
+      });
+    }
+    
+
+    const isParticipant = room.participants.some(
+      p => p.user.toString() === req.user._id.toString()
+    );
+    
+    if (!isParticipant) {
+      return res.status(403).json({
+        success: false,
+        message: 'Acesso negado'
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+
+    const updatedProgress = room.toggleRoomGoalForUser(
+      req.params.goalId, 
+      req.user._id, 
+      completed, 
+      today
+    );
+    
+    await room.save();
+    
+   
+    const user = await User.findById(req.user._id);
+    user.calculateDailyCompletion(room._id, today, room);
+    user.calculateWeeklyProgress(room._id);
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: 'Progresso da meta da sala atualizado com sucesso',
+      roomProgress: updatedProgress
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar progresso da meta da sala:', error);
     res.status(500).json({
       success: false,
       message: 'Erro interno do servidor'

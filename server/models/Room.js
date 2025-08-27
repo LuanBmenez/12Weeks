@@ -45,6 +45,48 @@ const roomSchema = new mongoose.Schema({
       default: true
     }
   }],
+  roomGoals: [{
+    text: {
+      type: String,
+      required: true
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  }],
+  roomDailyProgress: [{
+    date: {
+      type: Date,
+      required: true
+    },
+    completedGoals: [{
+      goalId: {
+        type: mongoose.Schema.Types.ObjectId
+      },
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      completed: {
+        type: Boolean,
+        default: false
+      }
+    }],
+    dailyPercentage: {
+      type: Number,
+      default: 0
+    }
+  }],
   dailyProgress: [{
     date: {
       type: Date,
@@ -172,6 +214,87 @@ roomSchema.methods.checkWeekAdvance = function() {
   }
   
   return false;
+};
+
+
+roomSchema.methods.calculateRoomGoalProgress = function(date) {
+  const todayStr = date.toDateString();
+  let roomProgressEntry = this.roomDailyProgress.find(progress => 
+    progress.date.toDateString() === todayStr
+  );
+  
+  if (!roomProgressEntry) {
+    roomProgressEntry = {
+      date: date,
+      completedGoals: [],
+      dailyPercentage: 0
+    };
+    this.roomDailyProgress.push(roomProgressEntry);
+  }
+  
+  const activeRoomGoals = this.roomGoals.filter(goal => goal.isActive);
+  if (activeRoomGoals.length === 0) return 0;
+  
+  
+  const participants = this.participants;
+  let totalCompletions = 0;
+  let totalPossibleCompletions = activeRoomGoals.length * participants.length;
+  
+  activeRoomGoals.forEach(goal => {
+    participants.forEach(participant => {
+      const completion = roomProgressEntry.completedGoals.find(
+        cg => cg.goalId.toString() === goal._id.toString() && 
+             cg.userId.toString() === participant.user.toString()
+      );
+      
+      if (completion && completion.completed) {
+        totalCompletions++;
+      }
+    });
+  });
+  
+  const percentage = totalPossibleCompletions > 0 ? (totalCompletions / totalPossibleCompletions) * 100 : 0;
+  roomProgressEntry.dailyPercentage = percentage;
+  
+  return percentage;
+};
+
+
+roomSchema.methods.toggleRoomGoalForUser = function(goalId, userId, completed, date) {
+  const todayStr = date.toDateString();
+  let roomProgressEntry = this.roomDailyProgress.find(progress => 
+    progress.date.toDateString() === todayStr
+  );
+  
+  if (!roomProgressEntry) {
+    roomProgressEntry = {
+      date: date,
+      completedGoals: [],
+      dailyPercentage: 0
+    };
+    this.roomDailyProgress.push(roomProgressEntry);
+  }
+  
+  
+  let goalCompletion = roomProgressEntry.completedGoals.find(
+    cg => cg.goalId.toString() === goalId.toString() && 
+         cg.userId.toString() === userId.toString()
+  );
+  
+  if (goalCompletion) {
+    goalCompletion.completed = completed;
+  } else {
+    roomProgressEntry.completedGoals.push({
+      goalId: goalId,
+      userId: userId,
+      completed: completed
+    });
+  }
+  
+  
+  this.calculateRoomGoalProgress(date);
+  
+  return roomProgressEntry;
 };
 
 export default mongoose.model('Room', roomSchema);

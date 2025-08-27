@@ -203,6 +203,38 @@ export const useRooms = () => {
     }
   }, []);
 
+  const addRoomGoals = useCallback(async (roomId, goals) => {
+    try {
+      setError(null);
+      
+      const response = await roomsAPI.setRoomGoals(roomId, goals);
+      
+      if (response.data.success) {
+        return { success: true };
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Erro ao definir metas da sala';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    }
+  }, []);
+
+  const completeRoomGoal = useCallback(async (roomId, goalId, completed) => {
+    try {
+      setError(null);
+      
+      const response = await roomsAPI.updateRoomGoalProgress(roomId, goalId, completed);
+      
+      if (response.data.success) {
+        return { success: true };
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Erro ao atualizar progresso da meta da sala';
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
+    }
+  }, []);
+
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
@@ -218,7 +250,9 @@ export const useRooms = () => {
     editRoom,
     getRoom,
     inviteUser,
-    deleteRoom
+    deleteRoom,
+    addRoomGoals,
+    completeRoomGoal
   };
 };
 

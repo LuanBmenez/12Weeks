@@ -36,7 +36,7 @@ import {
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { getRoom, addDailyGoals, completeGoal, inviteUser } = useRooms();
+  const { getRoom, addDailyGoals, completeGoal, inviteUser, addRoomGoals, completeRoomGoal } = useRooms();
   const { friends, fetchFriends } = useFriends();
   const { showSuccess, showError, showWarning } = useToast();
   const { user } = useAuth();
@@ -56,6 +56,15 @@ const Room = () => {
   const [inviteFriendCode, setInviteFriendCode] = useState('');
   const [inviting, setInviting] = useState(false);
   
+  
+  const [newRoomGoals, setNewRoomGoals] = useState(['', '', '', '', '']);
+  const [roomGoals, setRoomGoals] = useState([]);
+  const [roomGoalProgress, setRoomGoalProgress] = useState(0);
+  
+  // Estados para expansão/colapso
+  const [expandedIndividualGoals, setExpandedIndividualGoals] = useState(true);
+  const [expandedRoomGoals, setExpandedRoomGoals] = useState(true);
+  
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -63,7 +72,7 @@ const Room = () => {
   const [editDescription, setEditDescription] = useState('');
   const [saving, setSaving] = useState(false);
   
-  // Estados para expansão das metas dos participantes
+  
   const [expandedParticipants, setExpandedParticipants] = useState(new Set());
 
   useEffect(() => {
@@ -111,6 +120,11 @@ const Room = () => {
     setOverallPercentage(roomData.userProgress?.overallPercentage || 0);
     setCurrentWeek(roomData.userProgress?.currentWeek || 1);
     
+    // Carregar metas da sala
+    const activeRoomGoals = roomData.roomGoals || [];
+    setRoomGoals(activeRoomGoals);
+    setRoomGoalProgress(roomData.roomGoalProgress || 0);
+    
 
     const today = new Date();
     if ((today.getDay() === 0 || today.getDay() === 6) && (roomData.userProgress?.overallPercentage || 0) > 0) {
@@ -156,6 +170,47 @@ const Room = () => {
     } catch (err) {
       console.error('Erro ao atualizar progresso:', err);
       showError('Erro ao atualizar progresso');
+    }
+  };
+
+  const handleRoomGoalChange = (index, value) => {
+    const updatedGoals = [...newRoomGoals];
+    updatedGoals[index] = value;
+    setNewRoomGoals(updatedGoals);
+  };
+
+  const handleSubmitRoomGoals = async () => {
+    const validGoals = newRoomGoals.filter(goal => goal.trim() !== '');
+    
+    if (validGoals.length === 0) {
+      showWarning('Adicione pelo menos uma meta da sala!');
+      return;
+    }
+    
+    try {
+      const result = await addRoomGoals(roomId, validGoals);
+      if (result.success) {
+        setNewRoomGoals(['', '', '', '', '']);
+        await loadRoom(); 
+        showSuccess('Metas da sala atualizadas com sucesso! 🏠');
+      }
+    } catch (err) {
+      console.error('Erro ao definir metas da sala:', err);
+      showError('Erro ao definir metas da sala');
+    }
+  };
+
+  const handleToggleRoomGoal = async (goalId, completed) => {
+    try {
+      const result = await completeRoomGoal(roomId, goalId, completed);
+      if (result.success) {
+        await loadRoom(); 
+        const message = completed ? 'Meta da sala concluída! 🏠' : 'Meta da sala desmarcada';
+        showSuccess(message);
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar progresso da meta da sala:', err);
+      showError('Erro ao atualizar progresso da meta da sala');
     }
   };
 
@@ -323,8 +378,12 @@ const Room = () => {
     }
   };
 
-  const shouldShowGoalsForm = () => {
+    const shouldShowGoalsForm = () => {
     return weeklyGoals.length === 0;
+  };
+
+  const shouldShowRoomGoalsForm = () => {
+    return roomGoals.length === 0;
   };
 
   const shouldShowDailyReminder = () => {
@@ -333,8 +392,16 @@ const Room = () => {
     const today = new Date();
     const isWeekend = today.getDay() === 0 || today.getDay() === 6;
     
- 
+
     return !todayProgress && !isWeekend;
+  };
+
+  const toggleIndividualGoals = () => {
+    setExpandedIndividualGoals(!expandedIndividualGoals);
+  };
+
+  const toggleRoomGoals = () => {
+    setExpandedRoomGoals(!expandedRoomGoals);
   };
 
   const handleFeedbackAction = () => {
@@ -354,7 +421,7 @@ const Room = () => {
     return room?.participants?.some(p => p.user._id === friendId);
   };
 
-  // Função para alternar expansão das metas dos participantes
+
   const toggleParticipantExpansion = (participantId) => {
     setExpandedParticipants(prev => {
       const newSet = new Set(prev);
@@ -510,120 +577,299 @@ const Room = () => {
         </Header>
 
         <Content>
-          
-          <GoalsSection>
-            <GoalsHeader>
-              <h2>Metas Semanais</h2>
-              <div className="week-info">
-                <span className="week">Semana {currentWeek} de 12</span>
-                <span className="date">
-                  {new Date().toLocaleDateString('pt-BR', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </span>
-              </div>
-            </GoalsHeader>
-
-            {shouldShowDailyReminder() && (
-              <div style={{
-                background: '#eff6ff',
-                border: '1px solid #3b82f6',
-                borderRadius: '0.5rem',
-                padding: '1rem',
-                marginBottom: '1.5rem',
-                textAlign: 'center'
-              }}>
-                <p style={{ margin: 0, color: '#1e40af', fontWeight: '500' }}>
-                  🎯 <strong>Lembrete:</strong> Marque suas metas de hoje para manter o foco e produtividade!
-                </p>
-              </div>
-            )}
-
-            {shouldShowGoalsForm() ? (
-              <GoalsForm>
-                <h3>Defina suas metas para esta semana (máximo 5):</h3>
-                <p className="info">
-                  <strong>Importante:</strong> Você pode alterar suas metas a qualquer momento! 
-                  O objetivo é criar constância e flexibilidade por 12 semanas.
-                </p>
-                {newGoals.map((goal, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    placeholder={`Meta ${index + 1}`}
-                    value={goal}
-                    onChange={(e) => handleGoalChange(index, e.target.value)}
-                    maxLength={100}
-                  />
-                ))}
-                <button onClick={handleSubmitGoals}>
-                  Definir Metas Semanais
-                </button>
-              </GoalsForm>
-            ) : (
-              <GoalsList>
-                <div className="goals-header">
-                  <h3>Metas desta semana:</h3>
-                  <button 
-                    className="edit-goals-btn"
-                    onClick={() => {
-                      setNewGoals(weeklyGoals.map(goal => goal.text).concat(['', '', '', '', '']).slice(0, 5));
-                      setWeeklyGoals([]);
-                    }}
-                  >
-                    ✏️ Editar Metas
-                  </button>
+          {/* Seção de Metas da Sala */}
+          <GoalsSection className="modern-goals">
+            <div className="goals-card-header">
+              <div className="header-left">
+                <div className="goals-icon room">🏠</div>
+                <div className="goals-info">
+                  <h2>Metas da Sala</h2>
+                  <span className="goals-subtitle">Progresso Coletivo: {Math.round(roomGoalProgress)}%</span>
                 </div>
-                {weeklyGoals.map((goal, index) => {
-                  const isCompleted = todayProgress?.completedGoals?.find(
-                    gp => gp.goalId === goal._id
-                  )?.completed || false;
-                   
-                  return (
-                    <GoalItem key={goal._id || index}>
-                      <label>
+              </div>
+              <div className="header-right">
+                <div className="progress-badge room">
+                  {Math.round(roomGoalProgress)}%
+                </div>
+                <button 
+                  className="expand-toggle modern"
+                  onClick={toggleRoomGoals}
+                  title={expandedRoomGoals ? 'Recolher metas da sala' : 'Expandir metas da sala'}
+                >
+                  <span className={`arrow ${expandedRoomGoals ? 'expanded' : ''}`}>▼</span>
+                </button>
+              </div>
+            </div>
+
+            {expandedRoomGoals && (
+              <>
+                {shouldShowRoomGoalsForm() ? (
+                  isAdmin && (
+                    <GoalsForm>
+                      <h3>Defina as metas da sala (máximo 5):</h3>
+                      <p className="info">
+                        <strong>Administrador:</strong> Estas metas serão visíveis para todos os participantes 
+                        e cada um poderá marcar seu progresso individual.
+                        <br/><br/>
+                        <strong>⚡ Importante:</strong> As metas da sala <u>contribuem para o progresso individual</u> 
+                        de cada participante, afetando tanto o progresso diário quanto o progresso das 12 semanas.
+                      </p>
+                      {newRoomGoals.map((goal, index) => (
                         <input
-                          type="checkbox"
-                          checked={isCompleted}
-                          onChange={(e) => handleToggleGoal(goal._id, e.target.checked)}
+                          key={index}
+                          type="text"
+                          placeholder={`Meta da Sala ${index + 1}`}
+                          value={goal}
+                          onChange={(e) => handleRoomGoalChange(index, e.target.value)}
+                          maxLength={100}
                         />
-                        <span className={isCompleted ? 'completed' : ''}>
-                          {goal.text}
-                        </span>
-                      </label>
-                    </GoalItem>
-                  );
-                })}
-              </GoalsList>
+                      ))}
+                      <button onClick={handleSubmitRoomGoals}>
+                        Definir Metas da Sala
+                      </button>
+                    </GoalsForm>
+                  )
+                ) : (
+                  <div className="modern-goals-container">
+                    <div className="goals-actions">
+                      <h3>Metas da sala para hoje</h3>
+                      {isAdmin && (
+                        <button 
+                          className="edit-goals-btn modern"
+                          onClick={() => {
+                            setNewRoomGoals(roomGoals.map(goal => goal.text).concat(['', '', '', '', '']).slice(0, 5));
+                            setRoomGoals([]);
+                          }}
+                        >
+                          <span className="btn-icon">✏️</span>
+                          Editar
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="goals-grid">
+                      {roomGoals.map((goal, index) => {
+                        const isCompleted = goal.userCompleted || false;
+                         
+                        return (
+                          <div 
+                            key={goal._id || index} 
+                            className={`goal-card room ${isCompleted ? 'completed' : 'pending'}`}
+                            onClick={() => handleToggleRoomGoal(goal._id, !isCompleted)}
+                          >
+                            <div className="goal-status">
+                              <input
+                                type="checkbox"
+                                checked={isCompleted}
+                                onChange={() => {}} // Controlado pelo onClick do card
+                                className="goal-checkbox"
+                                tabIndex={-1} // Remove do tab navigation
+                              />
+                              <div className={`status-indicator ${isCompleted ? 'completed' : 'pending'}`}>
+                                {isCompleted ? '✓' : '○'}
+                              </div>
+                            </div>
+                            <div className="goal-content">
+                              <span className={`goal-text ${isCompleted ? 'completed' : ''}`}>
+                                {goal.text}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </GoalsSection>
+          
+          {/* Seção de Metas Individuais */}
+          <GoalsSection className="modern-goals">
+            <div className="goals-card-header">
+              <div className="header-left">
+                <div className="goals-icon individual">👤</div>
+                <div className="goals-info">
+                  <h2>Metas Individuais</h2>
+                  <span className="goals-subtitle">Semana {currentWeek} de 12</span>
+                </div>
+              </div>
+              <div className="header-right">
+                <div className="progress-badge individual">
+                  {todayProgress?.completedGoals?.filter(g => g.completed).length || 0}/{weeklyGoals.length}
+                </div>
+                <button 
+                  className="expand-toggle modern"
+                  onClick={toggleIndividualGoals}
+                  title={expandedIndividualGoals ? 'Recolher metas individuais' : 'Expandir metas individuais'}
+                >
+                  <span className={`arrow ${expandedIndividualGoals ? 'expanded' : ''}`}>▼</span>
+                </button>
+              </div>
+            </div>
+
+            {expandedIndividualGoals && (
+              <>
+                {shouldShowDailyReminder() && (
+                  <div style={{
+                    background: '#eff6ff',
+                    border: '1px solid #3b82f6',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
+                    textAlign: 'center'
+                  }}>
+                    <p style={{ margin: 0, color: '#1e40af', fontWeight: '500' }}>
+                      🎯 <strong>Lembrete:</strong> Marque suas metas de hoje para manter o foco e produtividade!
+                    </p>
+                  </div>
+                )}
+
+                {shouldShowGoalsForm() ? (
+                  <GoalsForm>
+                    <h3>Defina suas metas para esta semana (máximo 5):</h3>
+                    <p className="info">
+                      <strong>Importante:</strong> Você pode alterar suas metas a qualquer momento! 
+                      O objetivo é criar constância e flexibilidade por 12 semanas.
+                    </p>
+                    {newGoals.map((goal, index) => (
+                      <input
+                        key={index}
+                        type="text"
+                        placeholder={`Meta ${index + 1}`}
+                        value={goal}
+                        onChange={(e) => handleGoalChange(index, e.target.value)}
+                        maxLength={100}
+                      />
+                    ))}
+                    <button onClick={handleSubmitGoals}>
+                      Definir Metas Semanais
+                    </button>
+                  </GoalsForm>
+                ) : (
+                  <div className="modern-goals-container">
+                    <div className="goals-actions">
+                      <h3>Metas de hoje</h3>
+                      <button 
+                        className="edit-goals-btn modern"
+                        onClick={() => {
+                          setNewGoals(weeklyGoals.map(goal => goal.text).concat(['', '', '', '', '']).slice(0, 5));
+                          setWeeklyGoals([]);
+                        }}
+                      >
+                        <span className="btn-icon">✏️</span>
+                        Editar
+                      </button>
+                    </div>
+                    
+                    <div className="goals-grid">
+                      {weeklyGoals.map((goal, index) => {
+                        const isCompleted = todayProgress?.completedGoals?.find(
+                          gp => gp.goalId === goal._id
+                        )?.completed || false;
+                         
+                        return (
+                          <div 
+                            key={goal._id || index} 
+                            className={`goal-card ${isCompleted ? 'completed' : 'pending'}`}
+                            onClick={() => handleToggleGoal(goal._id, !isCompleted)}
+                          >
+                            <div className="goal-status">
+                              <input
+                                type="checkbox"
+                                checked={isCompleted}
+                                onChange={() => {}} // Controlado pelo onClick do card
+                                className="goal-checkbox"
+                                tabIndex={-1} // Remove do tab navigation
+                              />
+                              <div className={`status-indicator ${isCompleted ? 'completed' : 'pending'}`}>
+                                {isCompleted ? '✓' : '○'}
+                              </div>
+                            </div>
+                            <div className="goal-content">
+                              <span className={`goal-text ${isCompleted ? 'completed' : ''}`}>
+                                {goal.text}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </GoalsSection>
 
           
           <ProgressSection>
-            <ProgressCard>
-              <h3>Progresso de Hoje</h3>
-              <div className="progress-circle">
-                <div className="percentage">{Math.round(dailyPercentage)}%</div>
-                <div className="label">Concluído Hoje</div>
+            <ProgressCard className="modern-card">
+              <div className="card-header">
+                <div className="card-icon today">📊</div>
+                <div className="card-title">
+                  <h3>Hoje</h3>
+                  <span className="card-subtitle">Progresso diário</span>
+                </div>
+                <div className="card-percentage">{Math.round(dailyPercentage)}%</div>
               </div>
-              <div className="stats">
-                <span>
-                  {todayProgress?.completedGoals?.filter(g => g.completed).length || 0} de {weeklyGoals.length} metas
-                </span>
+              
+              <div className="progress-bar-container">
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill today" 
+                    style={{ width: `${dailyPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="progress-details">
+                <div className="detail-item">
+                  <span className="detail-icon">👤</span>
+                  <span className="detail-text">Individual</span>
+                  <span className="detail-count">
+                    {todayProgress?.completedGoals?.filter(g => g.completed).length || 0}/{weeklyGoals.length}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-icon">🏠</span>
+                  <span className="detail-text">Sala</span>
+                  <span className="detail-count">
+                    {roomGoals.filter(goal => goal.userCompleted).length}/{roomGoals.length}
+                  </span>
+                </div>
               </div>
             </ProgressCard>
 
-            <ProgressCard>
-              <h3>Progresso das 12 Semanas</h3>
-              <div className="progress-circle">
-                <div className="percentage">{Math.round(overallPercentage)}%</div>
-                <div className="label">Geral</div>
+            <ProgressCard className="modern-card">
+              <div className="card-header">
+                <div className="card-icon overall">🎯</div>
+                <div className="card-title">
+                  <h3>12 Semanas</h3>
+                  <span className="card-subtitle">Progresso geral</span>
+                </div>
+                <div className="card-percentage">{Math.round(overallPercentage)}%</div>
               </div>
-              <div className="stats">
-                <span>Semana {currentWeek} de 12</span>
+              
+              <div className="progress-bar-container">
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill overall" 
+                    style={{ width: `${overallPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="progress-details">
+                <div className="detail-item">
+                  <span className="detail-icon">📅</span>
+                  <span className="detail-text">Semana atual</span>
+                  <span className="detail-count">{currentWeek}/12</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-icon">⭐</span>
+                  <span className="detail-text">Todas as metas</span>
+                  <span className="detail-count">Combinado</span>
+                </div>
               </div>
             </ProgressCard>
           </ProgressSection>

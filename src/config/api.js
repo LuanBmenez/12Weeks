@@ -144,6 +144,12 @@ export const roomsAPI = {
   
   deleteRoom: (roomId) => 
     api.delete(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}`),
+  
+  setRoomGoals: (roomId, goals) => 
+    api.post(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/room-goals`, { goals }),
+  
+  updateRoomGoalProgress: (roomId, goalId, completed) => 
+    api.put(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/room-goals/${goalId}`, { completed }),
 };
 
 export default api;
