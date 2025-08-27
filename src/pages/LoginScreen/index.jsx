@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import {
   Container,
@@ -24,6 +24,12 @@ import {
   SubmitButton,
   Subtitle,
   Title,
+  RememberMeWrapper,
+  CheckboxWrapper,
+  Checkbox,
+  CheckboxLabel,
+  ErrorAlert,
+  LoadingText,
 } from "./style";
 
 export default function LoginScreen() {
@@ -33,6 +39,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -114,20 +121,12 @@ export default function LoginScreen() {
           <Subtitle>Entre na sua conta para continuar</Subtitle>
         </Header>
         <FormCard>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} role="form" aria-label="Formulário de login">
             {apiError && (
-              <div style={{
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fecaca',
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '16px',
-                color: '#dc2626',
-                fontSize: '14px',
-                textAlign: 'center'
-              }}>
+              <ErrorAlert>
+                <AlertCircle size={16} />
                 {apiError}
-              </div>
+              </ErrorAlert>
             )}
             
             <Field>
@@ -143,9 +142,16 @@ export default function LoginScreen() {
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   $hasError={!!errors.email}
                   placeholder="seu@email.com"
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  aria-invalid={!!errors.email}
                 />
               </InputWrapper>
-              {errors.email && <ErrorText>{errors.email}</ErrorText>}
+              {errors.email && (
+                <ErrorText id="email-error" role="alert">
+                  <AlertCircle size={14} />
+                  {errors.email}
+                </ErrorText>
+              )}
             </Field>
             <Field>
               <Label htmlFor="password">Senha</Label>
@@ -162,20 +168,43 @@ export default function LoginScreen() {
                   }
                   $hasError={!!errors.password}
                   placeholder="••••••••"
+                  aria-describedby={errors.password ? "password-error" : undefined}
+                  aria-invalid={!!errors.password}
                 />
                 <IconRight
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </IconRight>
               </InputWrapper>
-              {errors.password && <ErrorText>{errors.password}</ErrorText>}
+              {errors.password && (
+                <ErrorText id="password-error" role="alert">
+                  <AlertCircle size={14} />
+                  {errors.password}
+                </ErrorText>
+              )}
             </Field>
-            <ForgotPassword type="button">Esqueceu a senha?</ForgotPassword>
-            <SubmitButton type="submit" disabled={isLoading}>
+            
+            <RememberMeWrapper>
+              <CheckboxWrapper>
+                <Checkbox
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <CheckboxLabel htmlFor="rememberMe">Lembrar de mim</CheckboxLabel>
+              </CheckboxWrapper>
+              <ForgotPassword type="button">Esqueceu a senha?</ForgotPassword>
+            </RememberMeWrapper>
+            <SubmitButton type="submit" disabled={isLoading} aria-describedby={isLoading ? "loading-message" : undefined}>
               {isLoading ? (
-                <Spinner />
+                <>
+                  <Spinner />
+                  <LoadingText id="loading-message">Entrando...</LoadingText>
+                </>
               ) : (
                 <>
                   <span>Entrar</span>

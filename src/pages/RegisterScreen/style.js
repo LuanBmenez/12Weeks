@@ -8,10 +8,20 @@ export const Container = styled.div`
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  
+  @media (max-width: 640px) {
+    padding: 0.5rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
 `;
 export const Card = styled.div`
   width: 100%;
   max-width: 28rem;
+  
+  @media (max-width: 640px) {
+    max-width: 100%;
+  }
 `;
 export const BackButton = styled.button`
   display: flex;
@@ -34,6 +44,12 @@ export const BackButton = styled.button`
     box-shadow: 0 4px 16px rgba(37,99,235,0.15);
     transform: translateY(-2px);
   }
+  
+  @media (max-width: 640px) {
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
 `;
 export const Header = styled.div`
   text-align: center;
@@ -55,6 +71,10 @@ export const Title = styled.h1`
   font-weight: bold;
   color: #111827;
   margin-bottom: 0.5rem;
+  
+  @media (max-width: 640px) {
+    font-size: 1.75rem;
+  }
 `;
 export const Subtitle = styled.p`
   color: #4b5563;
@@ -64,6 +84,12 @@ export const FormCard = styled.div`
   border-radius: 1.5rem;
   box-shadow: 0 4px 32px rgba(0,0,0,0.10);
   padding: 2rem;
+  
+  @media (max-width: 640px) {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
 `;
 export const Form = styled.form`
   display: flex;
@@ -82,20 +108,73 @@ export const InputWrapper = styled.div`
   position: relative;
 `;
 export const Input = styled.input`
-  width: 85%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 2.5rem;
   border-radius: 1rem;
   border: 1px solid ${props => props.hasError ? '#fca5a5' : '#d1d5db'};
   background: ${props => props.hasError ? '#fee2e2' : '#fff'};
   font-size: 1rem;
-  transition: border 0.2s, background 0.2s;
-  &:hover { border-color: #9ca3af; }
-  &:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb33; }
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  &:hover { 
+    border-color: #9ca3af; 
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  &:focus { 
+    outline: none; 
+    border-color: #2563eb; 
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1), 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+  }
 `;
 export const ErrorText = styled.p`
   margin-top: 0.25rem;
   font-size: 0.875rem;
   color: #dc2626;
+  animation: slideInError 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  
+  @keyframes slideInError {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+export const ErrorAlert = styled.div`
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: slideInAlert 0.4s ease-out;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+  
+  @keyframes slideInAlert {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 `;
 export const IconLeft = styled.div`
   position: absolute;
@@ -161,6 +240,12 @@ export const Spinner = styled.div`
   animation: spin 1s linear infinite;
   @keyframes spin { to { transform: rotate(360deg); } }
 `;
+
+export const LoadingText = styled.span`
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  opacity: 0.9;
+`;
 export const Divider = styled.div`
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -179,4 +264,67 @@ export const LoginLink = styled.button`
   cursor: pointer;
   transition: color 0.2s;
   &:hover { color: #1d4ed8; }
+`;
+
+export const PasswordStrengthIndicator = styled.div`
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+`;
+
+export const StrengthBar = styled.div`
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+`;
+
+export const StrengthFill = styled.div`
+  height: 100%;
+  transition: all 0.3s ease;
+  background: ${props => {
+    switch(props.strength) {
+      case 1: return '#ef4444';
+      case 2: return '#f97316';
+      case 3: return '#eab308';
+      case 4: return '#22c55e';
+      default: return '#e5e7eb';
+    }
+  }};
+  width: ${props => (props.strength / 4) * 100}%;
+`;
+
+export const StrengthText = styled.div`
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: ${props => {
+    switch(props.strength) {
+      case 1: return '#ef4444';
+      case 2: return '#f97316';
+      case 3: return '#eab308';
+      case 4: return '#22c55e';
+      default: return '#6b7280';
+    }
+  }};
+`;
+
+export const PasswordRequirements = styled.div`
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+`;
+
+export const RequirementItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+  color: ${props => props.met ? '#22c55e' : '#6b7280'};
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
