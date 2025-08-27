@@ -6,20 +6,7 @@ export const UserActionsContainer = styled.div`
   gap: 1rem;
 `;
 
-export const IconButton = styled.button`
-  padding: 0.5rem;
-  color: #4b5563;
-  background: none;
-  border: none;
-  border-radius: 0.5rem;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
-  position: relative;
-  &:hover { 
-    color: #111827; 
-    background: #f3f4f6; 
-  }
-`;
+
 
 export const NotificationDot = styled.span`
   position: absolute;

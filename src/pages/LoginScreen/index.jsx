@@ -197,7 +197,12 @@ export default function LoginScreen() {
                 />
                 <CheckboxLabel htmlFor="rememberMe">Lembrar de mim</CheckboxLabel>
               </CheckboxWrapper>
-              <ForgotPassword type="button">Esqueceu a senha?</ForgotPassword>
+              <ForgotPassword 
+                type="button" 
+                onClick={() => navigate("/forgot-password")}
+              >
+                Esqueceu a senha?
+              </ForgotPassword>
             </RememberMeWrapper>
             <SubmitButton type="submit" disabled={isLoading} aria-describedby={isLoading ? "loading-message" : undefined}>
               {isLoading ? (

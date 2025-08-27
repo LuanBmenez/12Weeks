@@ -684,7 +684,7 @@ const Room = () => {
             )}
           </GoalsSection>
           
-          {/* Seção de Metas Individuais */}
+         
           <GoalsSection className="modern-goals">
             <div className="goals-card-header">
               <div className="header-left">
@@ -1061,7 +1061,7 @@ const Room = () => {
                     )}
                   </div>
                   
-                  {/* Seção expandida com metas individuais */}
+                  
                   {expandedParticipants.has(participant.user._id) && participant.progress && participant.progress.hasGoals && (
                     <div className="participant-goals-expanded">
                       <h5>Metas de hoje:</h5>

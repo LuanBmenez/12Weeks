@@ -27,27 +27,27 @@ export const useUserStats = () => {
     }
 
     try {
-      // Calcular estatísticas básicas
+    
       const totalRooms = rooms.length;
       const totalFriends = friends?.length || 0;
 
-      // Calcular metas e progresso
+      
       let totalGoals = 0;
       let completedGoals = 0;
       let overallProgress = user.weeklyProgress?.overallPercentage || 0;
       let currentWeek = user.weeklyProgress?.currentWeek || 1;
       let todayProgress = 0;
 
-      // Somar metas de todas as salas
+      
       rooms.forEach(room => {
-        // Metas individuais do usuário
+        
         const userGoals = user.individualGoals?.filter(goal => 
           goal.roomId?.toString() === room._id?.toString() && goal.isActive
         ) || [];
         
         totalGoals += userGoals.length;
 
-        // Progresso de hoje
+        
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -63,12 +63,12 @@ export const useUserStats = () => {
         }
       });
 
-      // Calcular progresso médio de hoje
+      
       if (totalRooms > 0) {
         todayProgress = todayProgress / totalRooms;
       }
 
-      // Calcular sequência semanal (simulado por enquanto)
+      
       const weeklyStreak = calculateWeeklyStreak();
 
       setStats({
@@ -95,7 +95,7 @@ export const useUserStats = () => {
     const weeklyData = user.weeklyProgress.weeklyPercentages;
     let streak = 0;
     
-    // Contar semanas consecutivas com progresso > 70%
+    
     for (let i = weeklyData.length - 1; i >= 0; i--) {
       if (weeklyData[i].percentage > 70) {
         streak++;

@@ -84,15 +84,15 @@ export default function RegisterScreen() {
     
     let strength = 0;
     const checks = [
-      /[a-z]/.test(password), // lowercase
-      /[A-Z]/.test(password), // uppercase
-      /\d/.test(password), // number
-      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) // special char
+      /[a-z]/.test(password), 
+      /[A-Z]/.test(password), 
+      /\d/.test(password), 
+      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) 
     ];
     
     strength = checks.filter(Boolean).length;
     
-    // Bonus for length
+    
     if (password.length >= 8) strength = Math.min(4, strength);
     if (password.length < 6) strength = Math.max(0, strength - 1);
     

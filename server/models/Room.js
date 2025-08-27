@@ -244,7 +244,7 @@ roomSchema.methods.calculateRoomGoalProgress = function(date) {
   
   activeRoomGoals.forEach(goal => {
     participants.forEach(participant => {
-      // Fix: Garantir que estamos comparando ObjectIds corretamente
+    
       const participantUserId = participant.user._id ? participant.user._id.toString() : participant.user.toString();
       
       const completion = roomProgressEntry.completedGoals.find(

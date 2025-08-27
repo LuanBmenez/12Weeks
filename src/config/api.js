@@ -7,7 +7,10 @@ const API_CONFIG = {
       REGISTER: '/auth/register',
       LOGIN: '/auth/login',
       ME: '/auth/me',
-      LOGOUT: '/auth/logout'
+      LOGOUT: '/auth/logout',
+      FORGOT_PASSWORD: '/auth/forgot-password',
+      VERIFY_RESET_TOKEN: '/auth/verify-reset-token',
+      RESET_PASSWORD: '/auth/reset-password'
     },
     FRIENDS: {
       SEARCH: '/friends/search',
@@ -59,10 +62,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Não redirecionar automaticamente para login em caso de 401
+    // Deixar o componente tratar o erro adequadamente
     if (error.response?.status === 401) {
+      // Apenas limpar dados inválidos, sem redirecionar
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -117,6 +122,15 @@ export const authAPI = {
   
   getProfile: () => 
     api.get(API_CONFIG.ENDPOINTS.AUTH.ME),
+
+  forgotPassword: (email) => 
+    api.post(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, { email }),
+
+  verifyResetToken: (token) => 
+    api.get(`${API_CONFIG.ENDPOINTS.AUTH.VERIFY_RESET_TOKEN}/${token}`),
+
+  resetPassword: (token, password) => 
+    api.post(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, { token, password })
 };
 
 

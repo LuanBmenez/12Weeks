@@ -186,7 +186,7 @@ export const SkeletonItem = styled.div`
     }
   }}
   
-  /* Responsividade */
+ 
   @media (max-width: 768px) {
     ${({ style }) => style && css`
       width: ${style.width === '100%' ? '100%' : 'auto'};
@@ -194,16 +194,16 @@ export const SkeletonItem = styled.div`
     `}
   }
   
-  /* Estados de foco para acessibilidade */
+
   &:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
   }
   
-  /* Transições suaves */
+
   transition: all 0.2s ease;
   
-  /* Melhorias para modo escuro */
+ 
   @media (prefers-color-scheme: dark) {
     ${({ variant }) => variant === 'default' && css`
       background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
@@ -211,7 +211,7 @@ export const SkeletonItem = styled.div`
     `}
   }
   
-  /* Melhorias para usuários com preferência de movimento reduzido */
+
   @media (prefers-reduced-motion: reduce) {
     animation: none !important;
     

@@ -414,7 +414,7 @@ const RoomsList = () => {
                     </motion.button>
                   </motion.div>
 
-                  {/* Efeito de brilho no hover */}
+               
                   <motion.div
                     className="card-shine"
                     initial={{ x: "-100%", opacity: 0 }}

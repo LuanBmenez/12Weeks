@@ -26,7 +26,7 @@ export default function Dashboard() {
     const result = await createRoom(roomData);
     if (result.success) {
       setIsCreateRoomModalOpen(false);
-      // Refresh stats after creating room
+     
       userStats.refreshStats();
     }
   };

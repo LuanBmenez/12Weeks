@@ -134,7 +134,7 @@ export const RoomInfo = styled.div`
     line-height: ${typography.lineHeight.relaxed};
   }
 
-  /* Estilo para a div da descrição que substitui o p */
+
   > div:last-child {
     margin: 0;
     color: ${colors.gray[600]};
@@ -423,7 +423,7 @@ export const GoalsSection = styled.div`
         border-radius: 0.75rem;
         padding: 1rem;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 1rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
@@ -821,7 +821,7 @@ export const ProgressCard = styled.div`
     }
   }
 
-  /* Novos estilos modernos */
+ 
   &.modern-card {
     padding: 1.5rem;
     border: 1px solid ${colors.gray[100]};

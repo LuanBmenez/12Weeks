@@ -34,3 +34,4 @@ export { default as ProtectedRoute } from './ProtectedRoute';
 export { default as DashboardHeader } from './DashboardHeader';
 export { default as RoomCard } from './RoomCard';
 export { default as RoomsList } from './RoomsList';
+export { default as ErrorBoundary } from './ErrorBoundary';
