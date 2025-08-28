@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 import {
   Divider,
   BackButton,
@@ -42,6 +42,7 @@ export default function RegisterScreen() {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -129,6 +130,14 @@ export default function RegisterScreen() {
       newErrors.name = "Nome deve ter pelo menos 2 caracteres";
     }
 
+    if (!formData.username.trim()) {
+      newErrors.username = "Nome de usuário é obrigatório";
+    } else if (formData.username.trim().length < 3) {
+      newErrors.username = "Nome de usuário deve ter pelo menos 3 caracteres";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = "Use apenas letras, números e underscore (_)";
+    }
+
     if (!formData.email.trim()) {
       newErrors.email = "Email é obrigatório";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -164,12 +173,16 @@ export default function RegisterScreen() {
     try {
       const result = await register({
         name: formData.name.trim(),
+        username: formData.username.trim().toLowerCase(),
         email: formData.email.trim(),
         password: formData.password,
       });
 
       if (!result.success) {
         setApiError(result.error);
+      } else if (result.requiresVerification) {
+        // Navegação já foi feita no contexto
+        // Apenas feedback visual se necessário
       }
 
 
@@ -226,6 +239,30 @@ export default function RegisterScreen() {
                 <ErrorText id="name-error" role="alert">
                   <AlertCircle size={14} />
                   {errors.name}
+                </ErrorText>
+              )}
+            </Field>
+            <Field>
+              <Label htmlFor="username">Nome de usuário</Label>
+              <InputWrapper>
+                <IconLeft>
+                  <User size={20} />
+                </IconLeft>
+                <Input
+                  id="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  hasError={!!errors.username}
+                  placeholder="Seu nome de usuário único"
+                  aria-describedby={errors.username ? "username-error" : undefined}
+                  aria-invalid={!!errors.username}
+                />
+              </InputWrapper>
+              {errors.username && (
+                <ErrorText id="username-error" role="alert">
+                  <AlertCircle size={14} />
+                  {errors.username}
                 </ErrorText>
               )}
             </Field>

@@ -1,7 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../config/api';
-import { AuthContext } from './AuthContext.js';
+
+const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -85,11 +94,41 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (userData) => {
+  // Função para login direto após verificação de email
+  const loginWithToken = (user, token) => {
+    console.log('loginWithToken chamado com:', { user, token });
+    
+    setUser(user);
+    setToken(token);
+    
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    console.log('Navegando para dashboard...');
+    navigate('/dashboard');
+    return { success: true };
+  };
+
+    const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
       
+      // Novo fluxo: se requer verificação de email
+      if (response.data.requiresEmailVerification) {
+        navigate('/verify-email', {
+          state: {
+            email: response.data.email,
+            tempUserId: response.data.tempUserId
+          }
+        });
+        return { 
+          success: true, 
+          requiresVerification: true,
+          message: response.data.message 
+        };
+      }
       
+      // Fluxo antigo (fallback)
       const { user, token } = response.data;
       
       setUser(user);
@@ -98,26 +137,34 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
-      
       navigate('/dashboard');
       return { success: true };
     } catch (error) {
       console.error('Erro no registro:', error);
       const errorMessage = error.response?.data?.message || 'Erro de conexão';
       return { 
-        success: false, 
-        error: errorMessage
+        success: false,
+        error: errorMessage 
       };
     }
   };
+
+  const updateUser = useCallback((updatedUser) => {
+    console.log('AuthContext - updateUser called with:', updatedUser);
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    console.log('AuthContext - user updated in state and localStorage');
+  }, []);
 
   const value = {
     user,
     token,
     loading,
     login,
+    loginWithToken,
     register,
     logout,
+    updateUser,
     isAuthenticated: !!user && !!token
   };
 

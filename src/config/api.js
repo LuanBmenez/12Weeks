@@ -62,10 +62,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Não redirecionar automaticamente para login em caso de 401
-    // Deixar o componente tratar o erro adequadamente
+
     if (error.response?.status === 401) {
-      // Apenas limpar dados inválidos, sem redirecionar
+    
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }

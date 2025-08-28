@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { useRooms } from './useRooms';
 import { useFriends } from './useFriends';
 

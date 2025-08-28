@@ -5,6 +5,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
+import path from 'path';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import Message from './models/Message.js';
 import authRoutes from './routes/auth.js';
 import friendRoutes from './routes/friends.js';
 import roomRoutes from './routes/rooms.js';
@@ -13,6 +17,14 @@ import emailService from './services/emailService.js';
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 
 
@@ -23,14 +35,15 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", "http://localhost:3001", "http://localhost:5173"],
       fontSrc: ["'self'", "https:"],
-      connectSrc: ["'self'", "https:"],
+      connectSrc: ["'self'", "https:", "http://localhost:3001"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     },
   },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
   hsts: {
     maxAge: 31536000, 
     includeSubDomains: true,
@@ -107,6 +120,31 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Servir arquivos estáticos (imagens de perfil) com CORS
+app.use('/uploads', cors(corsOptions), (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cache-Control', 'public, max-age=31536000');
+  next();
+}, express.static('uploads'));
+
+// Rota alternativa para servir imagens com headers específicos
+app.get('/api/image/:folder/:filename', cors(corsOptions), (req, res) => {
+  const { folder, filename } = req.params;
+  const imagePath = path.join(process.cwd(), 'uploads', folder, filename);
+  
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'image/*');
+  
+  res.sendFile(imagePath, (err) => {
+    if (err) {
+      res.status(404).json({ message: 'Imagem não encontrada' });
+    }
+  });
+});
+
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/12weeks')
   .then(() => console.log('✅ Conectado ao MongoDB'))
@@ -134,6 +172,50 @@ app.use('/api/auth', authRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/rooms', roomRoutes);
 
+io.on('connection', (socket) => {
+  console.log(`🔌 Usuário conectado: ${socket.id}`);
+
+  socket.on('join_room', async (roomId) => {
+    try {
+      socket.join(roomId);
+      console.log(`🚪 Usuário ${socket.id} entrou na sala ${roomId}`);
+
+      // Carregar histórico de mensagens
+      const history = await Message.find({ room: roomId })
+        .sort({ timestamp: 'asc' })
+        .limit(50)
+        .populate('author', 'username name profilePicture');
+      
+      socket.emit('load_history', history);
+
+    } catch (error) {
+      console.error('Erro ao entrar na sala ou carregar histórico:', error);
+    }
+  });
+
+  socket.on('send_message', async (data) => {
+    try {
+      const newMessage = new Message({
+        room: data.room,
+        author: data.author._id,
+        message: data.message,
+      });
+      await newMessage.save();
+
+      // Popular o autor para enviar dados completos para os clientes
+      const populatedMessage = await Message.findById(newMessage._id).populate('author', 'username name profilePicture');
+
+      io.to(data.room).emit('receive_message', populatedMessage);
+    } catch (error) {
+      console.error('Erro ao salvar ou enviar mensagem:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`🔌 Usuário desconectado: ${socket.id}`);
+  });
+});
+
 app.get('/', (req, res) => {
   res.json({ message: 'API 12Weeks funcionando!' });
 });
@@ -144,6 +226,6 @@ app.use((err, req, res) => {
   res.status(500).json({ message: 'Algo deu errado!' });
 });
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });

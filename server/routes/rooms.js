@@ -45,8 +45,8 @@ router.get('/my-rooms', auth, async (req, res) => {
       'participants.user': req.user._id,
       isActive: true
     })
-    .populate('creator', 'name email')
-    .populate('participants.user', 'name email')
+    .populate('creator', 'name email username profilePicture')
+    .populate('participants.user', 'name email username profilePicture')
     .sort({ updatedAt: -1 });
     
     res.json({
@@ -66,8 +66,8 @@ router.get('/my-rooms', auth, async (req, res) => {
 router.get('/:roomId', auth, async (req, res) => {
   try {
     const room = await Room.findById(req.params.roomId)
-      .populate('creator', 'name email')
-      .populate('participants.user', 'name email');
+      .populate('creator', 'name email username profilePicture')
+      .populate('participants.user', 'name email username profilePicture');
     
     if (!room) {
       return res.status(404).json({
@@ -417,8 +417,8 @@ router.put('/:roomId', auth, async (req, res) => {
     await room.save();
     
 
-    await room.populate('creator', 'name email');
-    await room.populate('participants.user', 'name email');
+    await room.populate('creator', 'name email username profilePicture');
+    await room.populate('participants.user', 'name email username profilePicture');
     
     res.json({
       success: true,
@@ -529,7 +529,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     await room.save();
     
 
-    await room.populate('participants.user', 'name email profilePicture');
+    await room.populate('participants.user', 'name email username profilePicture');
     
     res.json({
       success: true,

@@ -12,7 +12,7 @@ export const auth = async (req, res, next) => {
       });
     }
 
-    // Verificar formato do token
+  
     if (!/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(token)) {
       return res.status(401).json({ 
         message: 'Formato de token inválido',
@@ -25,7 +25,7 @@ export const auth = async (req, res, next) => {
       audience: '12Weeks-Users'
     });
 
-    // Validações adicionais
+    
     if (!decoded.userId || !decoded.type || decoded.type !== 'access') {
       return res.status(401).json({ 
         message: 'Token malformado',
@@ -42,7 +42,7 @@ export const auth = async (req, res, next) => {
       });
     }
 
-    // Verificar se o usuário está ativo
+   
     if (user.deletedAt) {
       return res.status(401).json({ 
         message: 'Conta desativada',

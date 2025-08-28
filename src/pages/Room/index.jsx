@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
+import { MessageSquare } from 'lucide-react';
 import { useRooms } from '../../hooks/useRooms';
 import { useFriends } from '../../hooks/useFriends';
 import { useToast } from '../../components/Toast';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { roomsAPI } from '../../config/api';
+
+import Chat from '../../components/Chat';
 
 import { 
   Container, 
@@ -13,6 +17,7 @@ import {
   BackButton, 
   RoomInfo, 
   Content,
+  FloatingChatButton,
   GoalsSection,
   GoalsHeader,
   GoalsForm,
@@ -32,6 +37,8 @@ import {
   FriendItem,
   EmptyState
 } from './style';
+
+const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001');
 
 const Room = () => {
   const { roomId } = useParams();
@@ -75,9 +82,42 @@ const Room = () => {
   
   const [expandedParticipants, setExpandedParticipants] = useState(new Set());
 
+  const [messages, setMessages] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   useEffect(() => {
     loadRoom();
+
+    socket.emit('join_room', roomId);
+
+    const handleNewMessage = (newMessage) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    };
+
+    const handleLoadHistory = (history) => {
+      setMessages(history);
+    };
+
+    socket.on('receive_message', handleNewMessage);
+    socket.on('load_history', handleLoadHistory);
+
+    return () => {
+      socket.off('receive_message', handleNewMessage);
+      socket.off('load_history', handleLoadHistory);
+    };
   }, [roomId]);
+
+  
+  useEffect(() => {
+    if (user && room) {
+      
+      const currentParticipant = room.participants?.find(p => p.user._id === user._id);
+      if (currentParticipant && currentParticipant.user.profilePicture !== user.profilePicture) {
+        loadRoom();
+      }
+    }
+  }, [user?.profilePicture, room]);
 
   useEffect(() => {
     fetchFriends();
@@ -160,15 +200,17 @@ const Room = () => {
   };
 
   const handleToggleGoal = async (goalId, completed) => {
+    console.log('🎯 handleToggleGoal chamado:', { goalId, completed });
     try {
       const result = await completeGoal(roomId, goalId, completed);
+      console.log('✅ Resultado completeGoal:', result);
       if (result.success) {
         await loadRoom(); 
         const message = completed ? 'Meta concluída! 🎉' : 'Meta desmarcada';
         showSuccess(message);
       }
     } catch (err) {
-      console.error('Erro ao atualizar progresso:', err);
+      console.error('❌ Erro ao atualizar progresso:', err);
       showError('Erro ao atualizar progresso');
     }
   };
@@ -350,6 +392,24 @@ const Room = () => {
       } else {
         cancelEditingDescription();
       }
+    }
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (currentMessage.trim() && user) {
+      const messageData = {
+        room: roomId,
+        author: {
+          _id: user._id,
+          name: user.username,
+          profilePicture: user.profilePicture,
+        },
+        message: currentMessage,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      socket.emit('send_message', messageData);
+      setCurrentMessage('');
     }
   };
 
@@ -575,9 +635,7 @@ const Room = () => {
             </div>
           </RoomInfo>
         </Header>
-
         <Content>
-          
           <GoalsSection className="modern-goals">
             <div className="goals-card-header">
               <div className="header-left">
@@ -683,8 +741,8 @@ const Room = () => {
               </>
             )}
           </GoalsSection>
-          
-         
+            
+           
           <GoalsSection className="modern-goals">
             <div className="goals-card-header">
               <div className="header-left">
@@ -801,7 +859,7 @@ const Room = () => {
             )}
           </GoalsSection>
 
-          
+            
           <ProgressSection>
             <ProgressCard className="modern-card">
               <div className="card-header">
@@ -874,7 +932,7 @@ const Room = () => {
             </ProgressCard>
           </ProgressSection>
 
-          
+            
           <ParticipantsSection className="modern-participants">
             <div className="participants-card-header">
               <div className="header-left">
@@ -1093,7 +1151,7 @@ const Room = () => {
             </div>
           </ParticipantsSection>
 
-         
+           
           {showFeedback && (
             <FeedbackSection>
               <FeedbackCard className={feedback.type}>
@@ -1113,6 +1171,23 @@ const Room = () => {
           )}
         </Content>
       </Main>
+
+      {!isChatOpen && (
+        <FloatingChatButton onClick={() => setIsChatOpen(true)}>
+          <MessageSquare />
+        </FloatingChatButton>
+      )}
+
+      {isChatOpen && (
+        <Chat 
+          messages={messages}
+          currentMessage={currentMessage}
+          setCurrentMessage={setCurrentMessage}
+          sendMessage={sendMessage}
+          user={user}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </Container>
   );
 };

@@ -86,8 +86,6 @@ export const Header = styled.div`
   align-items: center;
   gap: 2rem;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid ${colors.gray[200]};
 `;
 
 export const BackButton = styled.button`
@@ -255,6 +253,31 @@ export const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
+`;
+
+export const FloatingChatButton = styled.button`
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: ${colors.primary};
+  color: white;
+  border: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1000;
+
+  &:hover {
+    background: ${colors.primaryDark};
+    transform: scale(1.1);
+  }
 `;
 
 export const GoalsSection = styled.div`

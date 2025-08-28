@@ -10,6 +10,16 @@ const userSchema = new mongoose.Schema({
     minlength: [2, 'Nome deve ter pelo menos 2 caracteres'],
     maxlength: [50, 'Nome deve ter no máximo 50 caracteres']
   },
+  username: {
+    type: String,
+    required: [true, 'Nome de usuário é obrigatório'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    minlength: [3, 'Nome de usuário deve ter pelo menos 3 caracteres'],
+    maxlength: [30, 'Nome de usuário deve ter no máximo 30 caracteres'],
+    match: [/^[a-zA-Z0-9_]+$/, 'Nome de usuário pode conter apenas letras, números e underscores']
+  },
   email: {
     type: String,
     required: [true, 'Email é obrigatório'],
@@ -22,6 +32,26 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
     trim: true
+  },
+  lastProfileEdit: {
+    type: Date,
+    default: null
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationCode: {
+    type: String,
+    default: null
+  },
+  emailVerificationExpires: {
+    type: Date,
+    default: null
+  },
+  pendingEmail: {
+    type: String,
+    default: null
   },
   password: {
     type: String,
@@ -166,6 +196,34 @@ const userSchema = new mongoose.Schema({
 
 userSchema.methods.generateFriendCode = function() {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
+};
+
+// Método para gerar código de verificação de email
+userSchema.methods.generateEmailVerificationCode = function() {
+  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+  
+  this.emailVerificationCode = code;
+  this.emailVerificationExpires = expiresAt;
+  
+  return code;
+};
+
+// Método para verificar código de email
+userSchema.methods.verifyEmailCode = function(code) {
+  if (!this.emailVerificationCode || !this.emailVerificationExpires) {
+    return { success: false, message: 'Nenhum código de verificação encontrado' };
+  }
+  
+  if (Date.now() > this.emailVerificationExpires.getTime()) {
+    return { success: false, message: 'Código de verificação expirado' };
+  }
+  
+  if (this.emailVerificationCode !== code) {
+    return { success: false, message: 'Código de verificação inválido' };
+  }
+  
+  return { success: true, message: 'Código válido' };
 };
 
 

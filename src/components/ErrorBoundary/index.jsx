@@ -16,7 +16,7 @@ class ErrorBoundary extends React.Component {
       errorInfo: errorInfo
     });
     
-    // Log do erro para debugging
+    
     console.error('Erro capturado pelo ErrorBoundary:', error, errorInfo);
   }
 
@@ -68,7 +68,7 @@ class ErrorBoundary extends React.Component {
               }}>
                 {this.state.error && this.state.error.toString()}
                 <br />
-                {this.state.errorInfo.componentStack}
+                
               </pre>
             </details>
           )}

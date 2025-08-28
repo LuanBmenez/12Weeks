@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import { friendsAPI } from '../config/api';
+import { useToast } from '../components/Toast/index.jsx';
 
 export const useNotifications = () => {
-  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { showSuccess, showError } = useToast();
 
-  
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
@@ -21,89 +21,59 @@ export const useNotifications = () => {
     }
   }, []);
 
-  
   const fetchUnreadCount = useCallback(async () => {
     try {
       const response = await friendsAPI.getUnreadCount();
       setUnreadCount(response.data.unreadCount);
     } catch (error) {
-      console.error('Erro ao buscar contagem de não lidas:', error);
+      console.error('Erro ao contar notificações não lidas:', error);
     }
   }, []);
 
-  
+  useEffect(() => {
+    fetchNotifications();
+    fetchUnreadCount();
+  }, [fetchNotifications, fetchUnreadCount]);
+
   const markAsRead = useCallback(async (notificationId) => {
     try {
       await friendsAPI.markNotificationAsRead(notificationId);
       
       
       setNotifications(prev => 
-        prev.map(notification => 
-          notification._id === notificationId 
-            ? { ...notification, read: true }
-            : notification
-        )
+        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
       );
+      setUnreadCount(prev => Math.max(0, prev - 1));
       
-      
-      await fetchUnreadCount();
+      showSuccess('Notificação marcada como lida.');
     } catch (error) {
       console.error('Erro ao marcar notificação como lida:', error);
+      showError('Não foi possível marcar a notificação como lida.');
     }
-  }, [fetchUnreadCount]);
+  }, [showSuccess, showError]);
 
-  
   const markAllAsRead = useCallback(async () => {
     try {
       await friendsAPI.markAllNotificationsAsRead();
       
       
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, read: true }))
-      );
-      
-      
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
+      
+      showSuccess('Todas as notificações foram marcadas como lidas.');
     } catch (error) {
-      console.error('Erro ao marcar todas como lidas:', error);
+      console.error('Erro ao marcar todas as notificações como lidas:', error);
+      showError('Não foi possível marcar todas as notificações como lidas.');
     }
-  }, []);
+  }, [showSuccess, showError]);
 
-  
-  const addNotification = useCallback((notification) => {
-    setNotifications(prev => [notification, ...prev]);
-    if (!notification.read) {
-      setUnreadCount(prev => prev + 1);
-    }
-  }, []);
-
-  
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      fetchUnreadCount();
-    }
-  }, [user, fetchNotifications, fetchUnreadCount]);
-
-  
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      fetchNotifications();
-      fetchUnreadCount();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [user, fetchNotifications, fetchUnreadCount]);
-
-  return {
-    notifications,
-    unreadCount,
-    loading,
-    markAsRead,
-    markAllAsRead,
-    addNotification,
-    refreshNotifications: fetchNotifications
+  return { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    fetchNotifications, 
+    fetchUnreadCount,
+    markAsRead, 
+    markAllAsRead 
   };
 };

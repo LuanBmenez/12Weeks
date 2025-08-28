@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useRooms } from '../../hooks/useRooms';
 import { useUserStats } from '../../hooks/useUserStats';
 import DashboardHeader from "../../components/DashboardHeader";

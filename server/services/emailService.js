@@ -124,6 +124,125 @@ Se você não solicitou esta recuperação, ignore este email.
 12Weeks - Transforme seus objetivos em realidade
     `;
   }
+
+  async sendEmailVerification(email, verificationCode, userName, isEmailChange = false) {
+    if (!this.transporter) {
+      return { success: false, error: 'Serviço de email não configurado' };
+    }
+
+    try {
+      const subject = isEmailChange ? 
+        '📧 Confirmação de Mudança de Email - 12Weeks' : 
+        '✅ Confirmação de Cadastro - 12Weeks';
+
+      const mailOptions = {
+        from: `"12Weeks App" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: subject,
+        html: this.generateEmailVerificationHTML(verificationCode, userName, isEmailChange),
+        text: this.generateEmailVerificationText(verificationCode, userName, isEmailChange)
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log('📧 Email de verificação enviado com sucesso para:', email);
+      
+      return { 
+        success: true, 
+        messageId: result.messageId 
+      };
+    } catch (error) {
+      console.error('❌ Erro ao enviar email de verificação:', error);
+      return { 
+        success: false, 
+        error: error.message 
+      };
+    }
+  }
+
+  generateEmailVerificationHTML(verificationCode, userName, isEmailChange = false) {
+    const title = isEmailChange ? '📧 Confirmação de Mudança de Email' : '✅ Bem-vindo ao 12Weeks';
+    const message = isEmailChange ? 
+      'Para confirmar a mudança do seu email, use o código abaixo:' : 
+      'Para ativar sua conta, use o código de verificação abaixo:';
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; text-align: center; }
+          .code { 
+            background: #1e293b; 
+            color: #10b981; 
+            font-size: 32px; 
+            font-weight: bold; 
+            padding: 20px; 
+            border-radius: 8px; 
+            letter-spacing: 8px; 
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+          }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          .warning { background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 6px; margin: 20px 0; color: #dc2626; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>${title}</h1>
+          </div>
+          <div class="content">
+            <p>Olá <strong>${userName}</strong>,</p>
+            <p>${message}</p>
+            
+            <div class="code">${verificationCode}</div>
+            
+            <p><strong>Este código expira em 15 minutos.</strong></p>
+            
+            <div class="warning">
+              <p><strong>⚠️ Importante:</strong></p>
+              <p>Se você não solicitou esta ${isEmailChange ? 'mudança de email' : 'criação de conta'}, ignore este email.</p>
+              <p>Nunca compartilhe este código com ninguém.</p>
+            </div>
+          </div>
+          <div class="footer">
+            <p>12Weeks - Transforme seus objetivos em realidade</p>
+            <p>Este é um email automático, não responda a esta mensagem.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  generateEmailVerificationText(verificationCode, userName, isEmailChange = false) {
+    const title = isEmailChange ? 'Confirmação de Mudança de Email' : 'Bem-vindo ao 12Weeks';
+    const message = isEmailChange ? 
+      'Para confirmar a mudança do seu email, use o código abaixo:' : 
+      'Para ativar sua conta, use o código de verificação abaixo:';
+
+    return `
+${title}
+
+Olá ${userName},
+
+${message}
+
+CÓDIGO DE VERIFICAÇÃO: ${verificationCode}
+
+Este código expira em 15 minutos.
+
+IMPORTANTE: Se você não solicitou esta ${isEmailChange ? 'mudança de email' : 'criação de conta'}, ignore este email.
+Nunca compartilhe este código com ninguém.
+
+12Weeks - Transforme seus objetivos em realidade
+    `;
+  }
 }
 
 export default new EmailService();

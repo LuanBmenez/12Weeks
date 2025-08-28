@@ -25,14 +25,11 @@ import {
 
 const StatsCards = ({ userStats = {} }) => {
   const {
-    totalRooms = 0,
     totalGoals = 0,
     completedGoals = 0,
     overallProgress = 0,
     currentWeek = 1,
-    totalFriends = 0,
     weeklyStreak = 0,
-    todayProgress = 0
   } = userStats;
 
   const completionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
