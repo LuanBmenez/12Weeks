@@ -182,7 +182,9 @@ export const IconLeft = styled.div`
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
+  pointer-events: none;
 `;
+
 export const IconRight = styled.button`
   position: absolute;
   right: 0.75rem;

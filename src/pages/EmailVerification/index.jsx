@@ -39,7 +39,7 @@ const EmailVerification = () => {
       return;
     }
 
-    // Countdown para reenvio
+   
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -60,13 +60,13 @@ const EmailVerification = () => {
     newCode[index] = value;
     setCode(newCode);
 
-    // Auto-focus próximo input
+   
     if (value && index < 5) {
       const nextInput = document.querySelector(`input[name="code-${index + 1}"]`);
       if (nextInput) nextInput.focus();
     }
 
-    // Auto-submit quando completo
+    
     if (newCode.every(digit => digit !== '') && newCode.join('').length === 6) {
       handleVerification(newCode.join(''));
     }
@@ -109,7 +109,7 @@ const EmailVerification = () => {
         return;
       }
 
-      // Login automático
+      
       console.log('Fazendo login com:', { user: data.user, token: data.token });
       loginWithToken(data.user, data.token);
       showSuccess('Conta criada com sucesso! Bem-vindo ao 12Weeks! 🎉');

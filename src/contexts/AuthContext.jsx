@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Função para login direto após verificação de email
+ 
   const loginWithToken = (user, token) => {
     console.log('loginWithToken chamado com:', { user, token });
     
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData);
       
-      // Novo fluxo: se requer verificação de email
+      
       if (response.data.requiresEmailVerification) {
         navigate('/verify-email', {
           state: {
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
-      // Fluxo antigo (fallback)
+    
       const { user, token } = response.data;
       
       setUser(user);

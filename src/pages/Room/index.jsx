@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { MessageSquare } from 'lucide-react';
@@ -99,12 +99,22 @@ const Room = () => {
       setMessages(history);
     };
 
+    const handleMessageUpdate = (updatedMessage) => {
+      setMessages((prevMessages) => 
+        prevMessages.map(msg => 
+          msg._id === updatedMessage._id ? updatedMessage : msg
+        )
+      );
+    };
+
     socket.on('receive_message', handleNewMessage);
     socket.on('load_history', handleLoadHistory);
+    socket.on('message_updated', handleMessageUpdate);
 
     return () => {
       socket.off('receive_message', handleNewMessage);
       socket.off('load_history', handleLoadHistory);
+      socket.off('message_updated', handleMessageUpdate);
     };
   }, [roomId]);
 
@@ -402,11 +412,11 @@ const Room = () => {
         room: roomId,
         author: {
           _id: user._id,
-          name: user.username,
+          name: user.name || user.username,
           profilePicture: user.profilePicture,
         },
-        message: currentMessage,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        message: currentMessage.trim(),
+        timestamp: new Date(),
       };
       socket.emit('send_message', messageData);
       setCurrentMessage('');
@@ -1186,6 +1196,7 @@ const Room = () => {
           sendMessage={sendMessage}
           user={user}
           onClose={() => setIsChatOpen(false)}
+          socket={socket}
         />
       )}
     </Container>

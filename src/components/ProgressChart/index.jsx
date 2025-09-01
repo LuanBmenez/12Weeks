@@ -17,7 +17,7 @@ import {
 } from './style';
 
 const ProgressChart = ({ weeklyData = [], title = "Atividade Semanal", className }) => {
-  // Gerar dados dos últimos 7 dias se não fornecido
+  
   const generateWeeklyData = () => {
     const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const today = new Date();
@@ -28,7 +28,7 @@ const ProgressChart = ({ weeklyData = [], title = "Atividade Semanal", className
       date.setDate(date.getDate() - i);
       const dayName = days[date.getDay()];
       
-      // Buscar dados reais ou usar placeholder
+      
       const existingData = weeklyData.find(d => 
         new Date(d.date).toDateString() === date.toDateString()
       );
@@ -49,7 +49,7 @@ const ProgressChart = ({ weeklyData = [], title = "Atividade Semanal", className
   const maxPercentage = Math.max(...data.map(d => d.percentage));
   const avgPercentage = Math.round(data.reduce((sum, d) => sum + d.percentage, 0) / data.length);
   
-  // Calcular tendência
+ 
   const firstHalf = data.slice(0, Math.ceil(data.length / 2));
   const secondHalf = data.slice(Math.floor(data.length / 2));
   const firstAvg = firstHalf.reduce((sum, d) => sum + d.percentage, 0) / firstHalf.length;

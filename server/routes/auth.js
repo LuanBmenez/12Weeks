@@ -133,7 +133,7 @@ router.post('/register', registerValidation, async (req, res) => {
     const { name, email, password, username } = req.body;
 
     
-    // Verificar se usuário já existe (incluindo pendentes)
+ 
     const [existingUser, existingPendingUser] = await Promise.all([
       User.findOne({ $or: [{ email }, { username }] }),
       PendingUser.findOne({ $or: [{ email }, { username }] })
@@ -153,17 +153,17 @@ router.post('/register', registerValidation, async (req, res) => {
       return res.status(400).json({ message: 'Nome de usuário já tem registro pendente' });
     }
 
-    // Criar usuário pendente (não criar conta ainda)
+  
     const pendingUser = new PendingUser({ name, email, password, username });
     const verificationCode = pendingUser.generateVerificationCode();
     await pendingUser.save();
 
-    // Enviar email de verificação
+  
     const emailResult = await emailService.sendEmailVerification(
       pendingUser.email,
       verificationCode,
       pendingUser.name,
-      false // não é mudança de email
+      false
     );
 
     if (!emailResult.success) {
@@ -454,7 +454,7 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
   }
 });
 
-// Atualizar dados do perfil (com limite semanal)
+
 router.put('/update-profile', auth, async (req, res) => {
   try {
     const { name, username, email } = req.body;
@@ -465,7 +465,7 @@ router.put('/update-profile', auth, async (req, res) => {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    // Verificar se pode editar (limite semanal)
+    
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     
@@ -480,7 +480,7 @@ router.put('/update-profile', auth, async (req, res) => {
       });
     }
 
-    // Validar username único se foi alterado
+  
     if (username && username !== user.username) {
       const existingUser = await User.findOne({ username, _id: { $ne: userId } });
       if (existingUser) {
@@ -488,7 +488,7 @@ router.put('/update-profile', auth, async (req, res) => {
       }
     }
 
-    // Validar email único se foi alterado
+    
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email, _id: { $ne: userId } });
       if (existingUser) {
@@ -496,20 +496,20 @@ router.put('/update-profile', auth, async (req, res) => {
       }
     }
 
-    // Atualizar dados
+   
     const updateData = {};
     if (name && name !== user.name) updateData.name = name;
     if (username && username !== user.username) updateData.username = username;
     
     let emailChangeRequired = false;
     if (email && email !== user.email) {
-      // Para mudança de email, armazenar como pendente
+     
       updateData.pendingEmail = email;
       updateData.isEmailVerified = false;
       emailChangeRequired = true;
     }
     
-    // Se houve alterações, atualizar timestamp
+    
     if (Object.keys(updateData).length > 0) {
       updateData.lastProfileEdit = now;
     }
@@ -520,16 +520,16 @@ router.put('/update-profile', auth, async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    // Se há mudança de email, enviar código de verificação
+    
     if (emailChangeRequired) {
       const verificationCode = updatedUser.generateEmailVerificationCode();
       await updatedUser.save();
 
       const emailResult = await emailService.sendEmailVerification(
-        email, // enviar para o novo email
+        email,
         verificationCode,
         updatedUser.name,
-        true // é mudança de email
+        true 
       );
 
       if (!emailResult.success) {
@@ -566,7 +566,7 @@ router.put('/update-profile', auth, async (req, res) => {
   }
 });
 
-// Verificar código de email e criar conta
+
 router.post('/verify-email', async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -575,7 +575,7 @@ router.post('/verify-email', async (req, res) => {
       return res.status(400).json({ message: 'Email e código são obrigatórios' });
     }
 
-    // Buscar usuário pendente
+    
     const pendingUser = await PendingUser.findOne({ email });
     if (!pendingUser) {
       return res.status(404).json({ message: 'Registro pendente não encontrado' });
@@ -586,7 +586,7 @@ router.post('/verify-email', async (req, res) => {
       return res.status(400).json({ message: verification.message });
     }
 
-    // Verificar se já não existe usuário com esse email/username
+   
     const existingUser = await User.findOne({
       $or: [{ email: pendingUser.email }, { username: pendingUser.username }]
     });
@@ -596,21 +596,21 @@ router.post('/verify-email', async (req, res) => {
       return res.status(400).json({ message: 'Email ou username já cadastrado' });
     }
 
-    // Criar conta real
+   
     const user = new User({
       name: pendingUser.name,
       email: pendingUser.email,
-      password: pendingUser.password, // já está hasheada
+      password: pendingUser.password,
       username: pendingUser.username,
       isEmailVerified: true
     });
 
     await user.save();
 
-    // Remover registro pendente
+    
     await PendingUser.findByIdAndDelete(pendingUser._id);
 
-    // Gerar token de acesso
+    
     const token = jwt.sign(
       { 
         userId: user._id,
@@ -637,7 +637,7 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
-// Reenviar código de verificação
+
 router.post('/resend-verification', async (req, res) => {
   try {
     const { email } = req.body;
@@ -651,11 +651,11 @@ router.post('/resend-verification', async (req, res) => {
       return res.status(404).json({ message: 'Registro pendente não encontrado' });
     }
 
-    // Gerar novo código
+ 
     const verificationCode = pendingUser.generateVerificationCode();
     await pendingUser.save();
 
-    // Enviar email
+  
     const emailResult = await emailService.sendEmailVerification(
       pendingUser.email,
       verificationCode,
@@ -677,7 +677,7 @@ router.post('/resend-verification', async (req, res) => {
   }
 });
 
-// Verificar mudança de email
+
 router.post('/verify-email-change', auth, async (req, res) => {
   try {
     const { code } = req.body;
@@ -697,7 +697,7 @@ router.post('/verify-email-change', auth, async (req, res) => {
       return res.status(400).json({ message: verification.message });
     }
 
-    // Aplicar mudança de email
+   
     if (user.pendingEmail) {
       user.email = user.pendingEmail;
       user.pendingEmail = null;

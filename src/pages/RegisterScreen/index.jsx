@@ -35,7 +35,18 @@ import {
   ErrorAlert,
   LoadingText,
 } from "./style";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, UserPlus, User, Check, X, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  UserPlus,
+  User,
+  Check,
+  X,
+  AlertCircle,
+} from "lucide-react";
 
 export default function RegisterScreen() {
   const navigate = useNavigate();
@@ -76,48 +87,56 @@ export default function RegisterScreen() {
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
-    
+
     return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
   };
 
   const getPasswordStrength = (password) => {
     if (!password) return 0;
-    
+
     let strength = 0;
     const checks = [
-      /[a-z]/.test(password), 
-      /[A-Z]/.test(password), 
-      /\d/.test(password), 
-      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) 
+      /[a-z]/.test(password),
+      /[A-Z]/.test(password),
+      /\d/.test(password),
+      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     ];
-    
+
     strength = checks.filter(Boolean).length;
-    
-    
+
     if (password.length >= 8) strength = Math.min(4, strength);
     if (password.length < 6) strength = Math.max(0, strength - 1);
-    
+
     return strength;
   };
 
   const getPasswordStrengthText = (strength) => {
-    switch(strength) {
-      case 0: return '';
-      case 1: return 'Muito fraca';
-      case 2: return 'Fraca';
-      case 3: return 'Boa';
-      case 4: return 'Forte';
-      default: return '';
+    switch (strength) {
+      case 0:
+        return "";
+      case 1:
+        return "Muito fraca";
+      case 2:
+        return "Fraca";
+      case 3:
+        return "Boa";
+      case 4:
+        return "Forte";
+      default:
+        return "";
     }
   };
 
   const getPasswordRequirements = (password) => {
     return [
-      { text: 'Pelo menos 8 caracteres', met: password.length >= 8 },
-      { text: 'Uma letra minúscula', met: /[a-z]/.test(password) },
-      { text: 'Uma letra maiúscula', met: /[A-Z]/.test(password) },
-      { text: 'Um número', met: /\d/.test(password) },
-      { text: 'Um caractere especial', met: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) }
+      { text: "Pelo menos 8 caracteres", met: password.length >= 8 },
+      { text: "Uma letra minúscula", met: /[a-z]/.test(password) },
+      { text: "Uma letra maiúscula", met: /[A-Z]/.test(password) },
+      { text: "Um número", met: /\d/.test(password) },
+      {
+        text: "Um caractere especial",
+        met: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+      },
     ];
   };
 
@@ -149,7 +168,8 @@ export default function RegisterScreen() {
     } else if (formData.password.length < 8) {
       newErrors.password = "Senha deve ter pelo menos 8 caracteres";
     } else if (!validatePassword(formData.password)) {
-      newErrors.password = "Senha deve conter: 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial";
+      newErrors.password =
+        "Senha deve conter: 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial";
     }
 
     if (!formData.confirmPassword) {
@@ -181,14 +201,11 @@ export default function RegisterScreen() {
       if (!result.success) {
         setApiError(result.error);
       } else if (result.requiresVerification) {
-        // Navegação já foi feita no contexto
-        // Apenas feedback visual se necessário
+        ("?");
       }
-
-
     } catch (error) {
-      console.error('Erro na requisição:', error);
-      setApiError('Erro de conexão. Verifique se o servidor está rodando.');
+      console.error("Erro na requisição:", error);
+      setApiError("Erro de conexão. Verifique se o servidor está rodando.");
     } finally {
       setIsLoading(false);
     }
@@ -209,15 +226,18 @@ export default function RegisterScreen() {
           <Subtitle>Preencha os dados para se cadastrar</Subtitle>
         </Header>
         <FormCard>
-          <Form onSubmit={handleSubmit} role="form" aria-label="Formulário de cadastro">
-    
+          <Form
+            onSubmit={handleSubmit}
+            role="form"
+            aria-label="Formulário de cadastro"
+          >
             {apiError && (
               <ErrorAlert>
                 <AlertCircle size={16} />
                 {apiError}
               </ErrorAlert>
             )}
-            
+
             <Field>
               <Label htmlFor="name">Nome completo</Label>
               <InputWrapper>
@@ -252,10 +272,14 @@ export default function RegisterScreen() {
                   id="username"
                   type="text"
                   value={formData.username}
-                  onChange={(e) => handleInputChange("username", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value)
+                  }
                   hasError={!!errors.username}
                   placeholder="Seu nome de usuário único"
-                  aria-describedby={errors.username ? "username-error" : undefined}
+                  aria-describedby={
+                    errors.username ? "username-error" : undefined
+                  }
                   aria-invalid={!!errors.username}
                 />
               </InputWrapper>
@@ -305,7 +329,9 @@ export default function RegisterScreen() {
                   }
                   hasError={!!errors.password}
                   placeholder="Mínimo 8 caracteres"
-                  aria-describedby={errors.password ? "password-error" : "password-strength"}
+                  aria-describedby={
+                    errors.password ? "password-error" : "password-strength"
+                  }
                   aria-invalid={!!errors.password}
                 />
                 <IconRight
@@ -322,22 +348,47 @@ export default function RegisterScreen() {
                   {errors.password}
                 </ErrorText>
               )}
-              
+
               {formData.password && (
-                <PasswordStrengthIndicator id="password-strength" role="status" aria-live="polite">
+                <PasswordStrengthIndicator
+                  id="password-strength"
+                  role="status"
+                  aria-live="polite"
+                >
                   <StrengthBar aria-hidden="true">
-                    <StrengthFill strength={getPasswordStrength(formData.password)} />
+                    <StrengthFill
+                      strength={getPasswordStrength(formData.password)}
+                    />
                   </StrengthBar>
-                  <StrengthText strength={getPasswordStrength(formData.password)}>
-                    Força da senha: {getPasswordStrengthText(getPasswordStrength(formData.password))}
+                  <StrengthText
+                    strength={getPasswordStrength(formData.password)}
+                  >
+                    Força da senha:{" "}
+                    {getPasswordStrengthText(
+                      getPasswordStrength(formData.password)
+                    )}
                   </StrengthText>
                   <PasswordRequirements>
-                    {getPasswordRequirements(formData.password).map((req, index) => (
-                      <RequirementItem key={index} met={req.met} aria-label={req.met ? `${req.text} - atendido` : `${req.text} - não atendido`}>
-                        {req.met ? <Check size={12} aria-hidden="true" /> : <X size={12} aria-hidden="true" />}
-                        {req.text}
-                      </RequirementItem>
-                    ))}
+                    {getPasswordRequirements(formData.password).map(
+                      (req, index) => (
+                        <RequirementItem
+                          key={index}
+                          met={req.met}
+                          aria-label={
+                            req.met
+                              ? `${req.text} - atendido`
+                              : `${req.text} - não atendido`
+                          }
+                        >
+                          {req.met ? (
+                            <Check size={12} aria-hidden="true" />
+                          ) : (
+                            <X size={12} aria-hidden="true" />
+                          )}
+                          {req.text}
+                        </RequirementItem>
+                      )
+                    )}
                   </PasswordRequirements>
                 </PasswordStrengthIndicator>
               )}
@@ -396,11 +447,17 @@ export default function RegisterScreen() {
                 <TermsLink type="button">Política de Privacidade</TermsLink>
               </TermsLabel>
             </TermsWrapper>
-            <SubmitButton type="submit" disabled={isLoading} aria-describedby={isLoading ? "loading-message" : undefined}>
+            <SubmitButton
+              type="submit"
+              disabled={isLoading}
+              aria-describedby={isLoading ? "loading-message" : undefined}
+            >
               {isLoading ? (
                 <>
                   <Spinner />
-                  <LoadingText id="loading-message">Criando conta...</LoadingText>
+                  <LoadingText id="loading-message">
+                    Criando conta...
+                  </LoadingText>
                 </>
               ) : (
                 <>

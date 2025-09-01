@@ -69,25 +69,77 @@ export const Messages = styled.div`
 
 export const MessageBubble = styled.div`
   display: flex;
-  gap: 10px;
+  margin-bottom: 16px;
+  position: relative;
+  
+  ${props => props.isOwner && `
+    flex-direction: row-reverse;
+    
+    ${MessageInfo} {
+      margin-right: 12px;
+      margin-left: 0;
+      text-align: right;
+      align-items: flex-end;
+    }
+    
+    ${Avatar} {
+      margin-right: 0;
+      margin-left: 12px;
+    }
+    
+
+    &:hover .edit-button-container {
+      opacity: 1 !important;
+    }
+  `}
+`;
+
+export const MessageInfo = styled.div`
+  flex: 1;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  max-width: 80%;
-  align-self: ${props => props.isOwner ? 'flex-end' : 'flex-start'};
-  flex-direction: ${props => props.isOwner ? 'row-reverse' : 'row'};
+`;
+
+export const MessageAuthor = styled.div`
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 4px;
+`;
+
+export const MessageText = styled.div`
+  margin: 4px 0;
+  word-wrap: break-word;
+  line-height: 1.4;
+  color: #333;
+`;
+
+export const MessageTime = styled.div`
+  font-size: 11px;
+  color: #666;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
 `;
 
 export const Avatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #007bff;
-  color: white;
+  margin-right: 12px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #3b82f6;
+  color: white;
   font-weight: bold;
-  flex-shrink: 0;
-
+  font-size: 16px;
+  
   img {
     width: 100%;
     height: 100%;
@@ -96,34 +148,56 @@ export const Avatar = styled.div`
   }
 `;
 
-export const MessageInfo = styled.div`
-  background: ${props => props.isOwner ? '#dcf8c6' : '#fff'};
-  padding: 10px 15px;
-  border-radius: 18px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+export const ActionButton = styled.button`
+  background: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #666;
+  
+  &:hover {
+    background: #e5e7eb;
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+export const EditForm = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: ${props => props.isOwner ? 'flex-end' : 'flex-start'};
+  gap: 8px;
+  width: 100%;
 `;
 
-export const MessageAuthor = styled.span`
-  font-weight: bold;
-  font-size: 0.9em;
-  color: #333;
-  margin-bottom: 5px;
+export const EditInput = styled.textarea`
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
 `;
 
-export const MessageText = styled.p`
-  margin: 0;
-  color: #111;
-  word-wrap: break-word;
-  text-align: left;
-`;
-
-export const MessageTime = styled.span`
-  font-size: 0.75em;
-  color: #999;
-  margin-top: 5px;
+export const EditActions = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 `;
 
 export const MessageForm = styled.form`

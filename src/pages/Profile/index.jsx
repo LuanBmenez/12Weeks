@@ -5,8 +5,9 @@ import { useUserStats } from '../../hooks/useUserStats.js';
 import { useToast } from '../../components/Toast/index.jsx';
 import StatsCards from '../../components/StatsCards';
 import ProgressChart from '../../components/ProgressChart';
+import EditableField from '../../components/EditableField';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Check, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { 
   Container, 
   Header, 
@@ -17,6 +18,7 @@ import {
   ChartSection,
   BackButton
 } from './style';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -26,15 +28,6 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  
-  // Estados para edição inline
-  const [editingField, setEditingField] = useState(null);
-  const [editValues, setEditValues] = useState({
-    name: user?.name || '',
-    username: user?.username || '',
-    email: user?.email || ''
-  });
-  const [updating, setUpdating] = useState(false);
 
   if (!user) {
     return (
@@ -57,8 +50,7 @@ const Profile = () => {
   const handleBackToDashboard = () => {
     navigate('/dashboard');
   };
-
-  // Função para verificar se pode editar
+  
   const canEdit = () => {
     if (!user?.lastProfileEdit) return true;
     
@@ -68,8 +60,7 @@ const Profile = () => {
     
     return (now.getTime() - lastEdit.getTime()) >= oneWeekInMs;
   };
-
-  // Função para calcular dias restantes
+  
   const getDaysLeft = () => {
     if (!user?.lastProfileEdit) return 0;
     
@@ -80,50 +71,29 @@ const Profile = () => {
     return Math.ceil((nextEditDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
   };
 
-  // Iniciar edição
-  const startEditing = (field) => {
+  const handleSaveField = async (fieldName, value) => {
     if (!canEdit()) {
       const daysLeft = getDaysLeft();
       showError(`Você só pode editar seu perfil uma vez por semana. Próxima edição disponível em ${daysLeft} dia(s).`);
       return;
     }
-    
-    setEditingField(field);
-    setEditValues({
-      name: user?.name || '',
-      username: user?.username || '',
-      email: user?.email || ''
-    });
-  };
 
-  // Cancelar edição
-  const cancelEditing = () => {
-    setEditingField(null);
-    setEditValues({
-      name: user?.name || '',
-      username: user?.username || '',
-      email: user?.email || ''
-    });
-  };
+   
+    const finalValue = fieldName === 'username' ? String(value).replace(/^@+/, '') : value;
 
-  // Salvar edição
-  const saveEdit = async () => {
-    if (!editingField) return;
-    
+   
+    if (user[fieldName] === finalValue) return;
+
+    const payload = { [fieldName]: finalValue };
+
     try {
-      setUpdating(true);
-      
       const response = await fetch('http://localhost:3001/api/auth/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          name: editValues.name,
-          username: editValues.username,
-          email: editValues.email
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -137,16 +107,13 @@ const Profile = () => {
         return;
       }
 
-      // Atualizar contexto do usuário
       updateUser(data.user);
-      setEditingField(null);
-      showSuccess('Perfil atualizado com sucesso! 🎉');
+      const label = fieldName === 'name' ? 'Nome' : fieldName === 'username' ? 'Usuário' : 'Email';
+      showSuccess(`${label} atualizado com sucesso! 🎉`);
 
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      console.error(`Erro ao atualizar ${fieldName}:`, error);
       showError('Erro ao conectar com o servidor. Tente novamente.');
-    } finally {
-      setUpdating(false);
     }
   };
 
@@ -242,7 +209,7 @@ const Profile = () => {
     }
   };
 
-  // Função para calcular dados semanais reais
+ 
   const calculateWeeklyData = () => {
     if (!user?.dailyProgress) {
       return [];
@@ -252,7 +219,6 @@ const Profile = () => {
     const weeklyData = [];
     const daysOfWeek = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     
-    // Calcular os últimos 7 dias
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
@@ -260,7 +226,6 @@ const Profile = () => {
       
       const dayName = daysOfWeek[date.getDay()];
       
-      // Buscar progresso do dia em todas as salas
       const dayProgress = user.dailyProgress.filter(progress => {
         const progressDate = new Date(progress.date);
         progressDate.setHours(0, 0, 0, 0);
@@ -272,7 +237,6 @@ const Profile = () => {
       let averagePercentage = 0;
       
       if (dayProgress.length > 0) {
-        // Calcular total de metas e concluídas
         dayProgress.forEach(progress => {
           const roomGoals = user.individualGoals?.filter(goal => 
             goal.roomId?.toString() === progress.roomId?.toString() && goal.isActive
@@ -282,7 +246,7 @@ const Profile = () => {
           completedGoals += progress.completedGoals?.filter(g => g.completed).length || 0;
         });
         
-        // Calcular média de percentual do dia
+
         const totalPercentage = dayProgress.reduce((sum, progress) => sum + (progress.dailyPercentage || 0), 0);
         averagePercentage = dayProgress.length > 0 ? totalPercentage / dayProgress.length : 0;
       }
@@ -298,10 +262,10 @@ const Profile = () => {
     return weeklyData;
   };
 
-  // Dados semanais reais
+
   const weeklyData = calculateWeeklyData();
 
-  // Fallback para dados simulados se não houver dados reais
+
   const fallbackWeeklyData = [
     { day: 'Dom', percentage: 85, goalsCompleted: 6, totalGoals: 7 },
     { day: 'Seg', percentage: 92, goalsCompleted: 7, totalGoals: 8 },
@@ -365,38 +329,28 @@ const Profile = () => {
             <ProfileCard>
               <Avatar>
                 <div className="avatar-container">
-                  {(previewImage || user.profilePicture) ? (
+                  {previewImage ? (
                     <img 
-                      src={previewImage || user.profilePicture} 
-                      alt="Foto do Perfil"
-                      onError={(e) => {
-                        console.log('Image failed to load, showing placeholder');
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                      onLoad={() => {
-                        console.log('Image loaded successfully');
+                      src={previewImage} 
+                      alt="Preview da Foto"
+                      style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        margin: '0 auto 1rem auto',
+                        border: '3px solid #e2e8f0'
                       }}
                     />
-                  ) : null}
-                  <div 
-                    className="avatar-placeholder"
-                    style={{
-                      display: (previewImage || user.profilePicture) ? 'none' : 'flex',
-                      width: '80px',
-                      height: '80px',
-                      borderRadius: '50%',
-                      backgroundColor: '#3b82f6',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      color: 'white',
-                      margin: '0 auto 1rem auto'
-                    }}
-                  >
-                    {user.username?.charAt(0)?.toUpperCase() || 'U'}
-                  </div>
+                  ) : (
+                    <ImageWithFallback
+                      src={user.profilePicture}
+                      alt="Foto do Perfil"
+                      fallbackText={user.username?.charAt(0)?.toUpperCase() || 'U'}
+                      onLoad={() => console.log('Image loaded successfully')}
+                      onError={() => console.log('Image failed to load, showing placeholder')}
+                    />
+                  )}
                 </div>
                 
                 <input
@@ -417,92 +371,28 @@ const Profile = () => {
                 </button>
               </Avatar>
               <UserInfo>
-                {/* Nome editável */}
-                <div className="editable-field">
-                  {editingField === 'name' ? (
-                    <div className="edit-mode">
-                      <input
-                        type="text"
-                        value={editValues.name}
-                        onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
-                        onKeyPress={(e) => e.key === 'Enter' && saveEdit()}
-                        disabled={updating}
-                        autoFocus
-                      />
-                      <div className="edit-actions">
-                        <button onClick={saveEdit} disabled={updating}>
-                          <Check size={16} />
-                        </button>
-                        <button onClick={cancelEditing} disabled={updating}>
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="display-mode" onClick={() => startEditing('name')}>
-                      <h2>{user.name}</h2>
-                      <Edit3 size={16} className="edit-icon" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Username editável */}
-                <div className="editable-field">
-                  {editingField === 'username' ? (
-                    <div className="edit-mode">
-                      <input
-                        type="text"
-                        value={editValues.username}
-                        onChange={(e) => setEditValues(prev => ({ ...prev, username: e.target.value }))}
-                        onKeyPress={(e) => e.key === 'Enter' && saveEdit()}
-                        disabled={updating}
-                        autoFocus
-                      />
-                      <div className="edit-actions">
-                        <button onClick={saveEdit} disabled={updating}>
-                          <Check size={16} />
-                        </button>
-                        <button onClick={cancelEditing} disabled={updating}>
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="display-mode username" onClick={() => startEditing('username')}>
-                      <p>@{user.username}</p>
-                      <Edit3 size={14} className="edit-icon" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Email editável */}
-                <div className="editable-field">
-                  {editingField === 'email' ? (
-                    <div className="edit-mode">
-                      <input
-                        type="email"
-                        value={editValues.email}
-                        onChange={(e) => setEditValues(prev => ({ ...prev, email: e.target.value }))}
-                        onKeyPress={(e) => e.key === 'Enter' && saveEdit()}
-                        disabled={updating}
-                        autoFocus
-                      />
-                      <div className="edit-actions">
-                        <button onClick={saveEdit} disabled={updating}>
-                          <Check size={16} />
-                        </button>
-                        <button onClick={cancelEditing} disabled={updating}>
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="display-mode" onClick={() => startEditing('email')}>
-                      <p>{user.email}</p>
-                      <Edit3 size={14} className="edit-icon" />
-                    </div>
-                  )}
-                </div>
+                <EditableField
+                  label="Nome"
+                  value={user.name}
+                  onSave={handleSaveField}
+                  isEditable={canEdit()}
+                  fieldName="name"
+                />
+                <EditableField
+                  label="Usuário"
+                  value={user.username}
+                  onSave={handleSaveField}
+                  isEditable={canEdit()}
+                  fieldName="username"
+                />
+                <EditableField
+                  label="Email"
+                  value={user.email}
+                  onSave={handleSaveField}
+                  isEditable={false} 
+                  fieldName="email"
+                  inputType="email"
+                />
               </UserInfo>
             </ProfileCard>
           </motion.div>

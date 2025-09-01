@@ -43,13 +43,13 @@ const pendingUserSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 3600 // Remove após 1 hora se não verificado
+    expires: 3600 
   }
 }, {
   timestamps: true
 });
 
-// Hash da senha antes de salvar
+
 pendingUserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
@@ -62,10 +62,10 @@ pendingUserSchema.pre('save', async function(next) {
   }
 });
 
-// Método para gerar código de verificação
+
 pendingUserSchema.methods.generateVerificationCode = function() {
-  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+  const code = Math.floor(100000 + Math.random() * 900000).toString(); 
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); 
   
   this.verificationCode = code;
   this.verificationExpires = expiresAt;
@@ -73,7 +73,7 @@ pendingUserSchema.methods.generateVerificationCode = function() {
   return code;
 };
 
-// Método para verificar código
+
 pendingUserSchema.methods.verifyCode = function(code) {
   if (!this.verificationCode || !this.verificationExpires) {
     return { success: false, message: 'Nenhum código de verificação encontrado' };
@@ -91,3 +91,4 @@ pendingUserSchema.methods.verifyCode = function(code) {
 };
 
 export default mongoose.model('PendingUser', pendingUserSchema);
+

@@ -92,12 +92,12 @@ export const Bar = styled.div`
   
   ${props => {
     const normalizedHeight = (props.percentage / props.maxPercentage) * 100;
-    let backgroundColor = '#ef4444'; // Vermelho para baixo progresso
+    let backgroundColor = '#ef4444'; 
     
     if (props.percentage >= 80) {
-      backgroundColor = '#10b981'; // Verde para alta performance
+      backgroundColor = '#10b981'; 
     } else if (props.percentage >= 50) {
-      backgroundColor = '#f59e0b'; // Amarelo para performance média
+      backgroundColor = '#f59e0b'; 
     }
     
     return `

@@ -198,10 +198,10 @@ userSchema.methods.generateFriendCode = function() {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
 };
 
-// Método para gerar código de verificação de email
+
 userSchema.methods.generateEmailVerificationCode = function() {
-  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 dígitos
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); 
   
   this.emailVerificationCode = code;
   this.emailVerificationExpires = expiresAt;
@@ -209,7 +209,7 @@ userSchema.methods.generateEmailVerificationCode = function() {
   return code;
 };
 
-// Método para verificar código de email
+
 userSchema.methods.verifyEmailCode = function(code) {
   if (!this.emailVerificationCode || !this.emailVerificationExpires) {
     return { success: false, message: 'Nenhum código de verificação encontrado' };

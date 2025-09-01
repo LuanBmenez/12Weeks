@@ -1,4 +1,3 @@
-
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -110,8 +109,7 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  
-  // Adicionar IP real para rate limiting (sem modificar req.ip)
+
   req.realIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   
   next();
@@ -120,7 +118,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Servir arquivos estáticos (imagens de perfil) com CORS
+
 app.use('/uploads', cors(corsOptions), (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -129,7 +127,7 @@ app.use('/uploads', cors(corsOptions), (req, res, next) => {
   next();
 }, express.static('uploads'));
 
-// Rota alternativa para servir imagens com headers específicos
+
 app.get('/api/image/:folder/:filename', cors(corsOptions), (req, res) => {
   const { folder, filename } = req.params;
   const imagePath = path.join(process.cwd(), 'uploads', folder, filename);
@@ -172,6 +170,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/rooms', roomRoutes);
 
+// Rota estática para imagens - deve vir depois das rotas da API
+app.use('/api/image/profile-pictures', express.static(path.join(process.cwd(), 'uploads/profile-pictures')));
+
 io.on('connection', (socket) => {
   console.log(`🔌 Usuário conectado: ${socket.id}`);
 
@@ -180,7 +181,7 @@ io.on('connection', (socket) => {
       socket.join(roomId);
       console.log(`🚪 Usuário ${socket.id} entrou na sala ${roomId}`);
 
-      // Carregar histórico de mensagens
+
       const history = await Message.find({ room: roomId })
         .sort({ timestamp: 'asc' })
         .limit(50)
@@ -202,12 +203,38 @@ io.on('connection', (socket) => {
       });
       await newMessage.save();
 
-      // Popular o autor para enviar dados completos para os clientes
       const populatedMessage = await Message.findById(newMessage._id).populate('author', 'username name profilePicture');
 
       io.to(data.room).emit('receive_message', populatedMessage);
     } catch (error) {
       console.error('Erro ao salvar ou enviar mensagem:', error);
+    }
+  });
+
+  // Nova funcionalidade: editar mensagem
+  socket.on('edit_message', async (data) => {
+    try {
+      const { messageId, userId, newMessage } = data;
+      const message = await Message.findById(messageId);
+      
+      if (!message) {
+        socket.emit('edit_error', { message: 'Mensagem não encontrada' });
+        return;
+      }
+
+      if (!message.canEdit(userId)) {
+        socket.emit('edit_error', { message: 'Você não pode editar esta mensagem' });
+        return;
+      }
+
+      message.message = newMessage;
+      await message.markAsEdited();
+      
+      const updatedMessage = await Message.findById(messageId).populate('author', 'username name profilePicture');
+      io.to(message.room.toString()).emit('message_updated', updatedMessage);
+    } catch (error) {
+      console.error('Erro ao editar mensagem:', error);
+      socket.emit('edit_error', { message: 'Erro ao editar mensagem' });
     }
   });
 

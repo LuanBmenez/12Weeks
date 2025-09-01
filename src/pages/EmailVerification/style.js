@@ -179,3 +179,4 @@ export const ResendButton = styled.button`
     animation: ${spin} 1s linear infinite;
   }
 `;
+
