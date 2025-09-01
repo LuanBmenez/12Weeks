@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useUserStats } from '../../hooks/useUserStats.js';
 import { useToast } from '../../components/Toast/index.jsx';
+import config from '../../config/config';
 import StatsCards from '../../components/StatsCards';
 import ProgressChart from '../../components/ProgressChart';
 import EditableField from '../../components/EditableField';
@@ -87,7 +88,7 @@ const Profile = () => {
     const payload = { [fieldName]: finalValue };
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/update-profile', {
+      const response = await fetch(`${config.API_BASE_URL}/auth/update-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ const Profile = () => {
 
   const testServerConnection = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/me', {
+      const response = await fetch(`${config.API_BASE_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -170,7 +171,7 @@ const Profile = () => {
       formData.append('profilePicture', file);
 
       console.log('Sending request to server...');
-      const response = await fetch('http://localhost:3001/api/auth/upload-profile-picture', {
+      const response = await fetch(`${config.API_BASE_URL}/auth/upload-profile-picture`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

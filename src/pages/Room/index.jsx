@@ -7,6 +7,7 @@ import { useFriends } from '../../hooks/useFriends';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { roomsAPI } from '../../config/api';
+import config from '../../config/config';
 
 import Chat from '../../components/Chat';
 
@@ -38,7 +39,7 @@ import {
   EmptyState
 } from './style';
 
-const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3001');
+const socket = io(config.SOCKET_URL);
 
 const Room = () => {
   const { roomId } = useParams();

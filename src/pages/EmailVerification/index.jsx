@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Mail, RefreshCw, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../components/Toast/index.jsx';
+import config from '../../config/config';
 import {
   Container,
   Card,
@@ -90,7 +91,7 @@ const EmailVerification = () => {
     try {
       setLoading(true);
 
-      const response = await fetch('http://localhost:3001/api/auth/verify-email', {
+      const response = await fetch(`${config.API_BASE_URL}/auth/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -126,7 +127,7 @@ const EmailVerification = () => {
     try {
       setResendLoading(true);
 
-      const response = await fetch('http://localhost:3001/api/auth/resend-verification', {
+      const response = await fetch(`${config.API_BASE_URL}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
