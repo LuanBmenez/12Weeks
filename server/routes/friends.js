@@ -88,14 +88,14 @@ router.post('/request', auth, [
     }
 
     
-    await User.findByIdAndUpdate(currentUserId, {
-      $push: {
-        friendRequests: {
-          from: targetUser._id,
-          status: 'pending'
-        }
-      }
-    });
+    // await User.findByIdAndUpdate(currentUserId, {
+    //   $push: {
+    //     friendRequests: {
+    //       from: targetUser._id,
+    //       status: 'pending'
+    //     }
+    //   }
+    // });
 
     
     await User.findByIdAndUpdate(targetUser._id, {
