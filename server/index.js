@@ -13,7 +13,7 @@ import friendRoutes from './routes/friends.js';
 import roomRoutes from './routes/rooms.js';
 import emailService from './services/emailService.js';
 
-dotenv.config();
+dotenv.config({ path: './.env' });
 
 const app = express();
 const httpServer = createServer(app);

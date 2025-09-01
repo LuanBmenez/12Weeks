@@ -233,8 +233,11 @@ userSchema.pre('save', async function(next) {
   try {
     
     if (this.isModified('password')) {
-      const salt = await bcrypt.genSalt(12);
-      this.password = await bcrypt.hash(this.password, salt);
+      // Verificar se a senha já está hashada (começa com $2a$)
+      if (!this.password.startsWith('$2a$')) {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+      }
     }
     
     
