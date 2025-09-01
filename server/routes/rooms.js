@@ -758,10 +758,18 @@ router.put('/:roomId/room-goals/:goalId', auth, async (req, res) => {
     user.calculateWeeklyProgress(room._id);
     await user.save();
     
+   
+    const todayProgress = user.dailyProgress.find(progress => 
+      progress.roomId.toString() === room._id.toString() &&
+      progress.date.toDateString() === today.toDateString()
+    );
+    
     res.json({
       success: true,
       message: 'Progresso da meta da sala atualizado com sucesso',
-      roomProgress: updatedProgress
+      roomProgress: updatedProgress,
+      todayProgress: todayProgress,
+      weeklyProgress: user.weeklyProgress
     });
   } catch (error) {
     console.error('Erro ao atualizar progresso da meta da sala:', error);

@@ -107,7 +107,11 @@ export const useRooms = () => {
           })
         );
         
-        return { success: true };
+        return { 
+          success: true, 
+          todayProgress: response.data.todayProgress,
+          weeklyProgress: response.data.weeklyProgress
+        };
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Erro ao atualizar progresso';
@@ -226,7 +230,34 @@ export const useRooms = () => {
       const response = await roomsAPI.updateRoomGoalProgress(roomId, goalId, completed);
       
       if (response.data.success) {
-        return { success: true };
+     
+        setRooms(prevRooms => 
+          prevRooms.map(room => {
+            if (room._id === roomId) {
+              const updatedRoom = { ...room };
+              
+             
+              if (updatedRoom.roomGoals) {
+                updatedRoom.roomGoals = updatedRoom.roomGoals.map(goal => {
+                  if (goal._id === goalId) {
+                    return { ...goal, userCompleted: completed };
+                  }
+                  return goal;
+                });
+              }
+              
+              return updatedRoom;
+            }
+            return room;
+          })
+        );
+        
+        return { 
+          success: true, 
+          roomProgress: response.data.roomProgress,
+          todayProgress: response.data.todayProgress,
+          weeklyProgress: response.data.weeklyProgress
+        };
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Erro ao atualizar progresso da meta da sala';

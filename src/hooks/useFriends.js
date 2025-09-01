@@ -47,28 +47,16 @@ export const useFriends = () => {
 
   const sendFriendRequest = async (code) => {
     try {
-      console.log('=== FRONTEND: Enviando solicitação de amizade ===');
-      console.log('Código:', code);
-      
       setLoading(true);
       setError('');
       
-      console.log('📤 Fazendo requisição para /friends/request...');
-      const response = await api.post('/friends/request', { friendCode: code });
-      
-      console.log('✅ Resposta recebida:', response.data);
-      console.log('Status:', response.status);
+      await api.post('/friends/request', { friendCode: code });
       
       setError('');
       setSearchResult(null);
       
-      console.log('✅ Retornando sucesso');
       return { success: true, message: 'Solicitação enviada com sucesso!' };
     } catch (error) {
-      console.log('❌ Erro capturado:', error);
-      console.log('Status do erro:', error.response?.status);
-      console.log('Dados do erro:', error.response?.data);
-      
       const message = error.response?.data?.message || 'Erro ao enviar solicitação';
       setError(message);
       return { success: false, message };
@@ -129,14 +117,7 @@ export const useFriends = () => {
       
       setFriends(prev => prev.filter(friend => friend._id !== friendId));
       
-      
-      addNotification({
-        _id: Date.now().toString(),
-        type: 'friend_removed',
-        message: 'Amigo removido com sucesso',
-        read: false,
-        createdAt: new Date().toISOString()
-      });
+
       
       return { success: true, message: 'Amigo removido com sucesso!' };
     } catch (error) {

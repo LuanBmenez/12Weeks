@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { MessageSquare } from 'lucide-react';
@@ -48,6 +48,50 @@ const Room = () => {
   const { friends, fetchFriends } = useFriends();
   const { showSuccess, showError, showWarning } = useToast();
   const { user } = useAuth();
+
+  const loadRoomData = (roomData) => {
+    const activeGoals = roomData.userIndividualGoals?.filter(goal => goal.isActive) || [];
+    setWeeklyGoals(activeGoals);
+    
+    const todayProgressData = roomData.userTodayProgress;
+    
+    if (todayProgressData) {
+      setTodayProgress(todayProgressData);
+      setDailyPercentage(todayProgressData.dailyPercentage || 0);
+    } else {
+      setTodayProgress(null);
+      setDailyPercentage(0);
+    }
+    
+    setOverallPercentage(roomData.userProgress?.overallPercentage || 0);
+    setCurrentWeek(roomData.userProgress?.currentWeek || 1);
+    
+    const activeRoomGoals = roomData.roomGoals || [];
+    setRoomGoals(activeRoomGoals);
+    setRoomGoalProgress(roomData.roomGoalProgress || 0);
+    
+    const today = new Date();
+    if ((today.getDay() === 0 || today.getDay() === 6) && (roomData.userProgress?.overallPercentage || 0) > 0) {
+      setShowFeedback(true);
+    }
+  };
+
+  const loadRoom = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await getRoom(roomId);
+      if (result.success) {
+        setRoom(result.room);
+        loadRoomData(result.room);
+      } else {
+        setError('Erro ao carregar sala');
+      }
+    } catch {
+      setError('Erro ao carregar sala');
+    } finally {
+      setLoading(false);
+    }
+  }, [roomId, getRoom]);
  
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -117,7 +161,7 @@ const Room = () => {
       socket.off('load_history', handleLoadHistory);
       socket.off('message_updated', handleMessageUpdate);
     };
-  }, [roomId]);
+  }, [roomId, loadRoom]);
 
   
   useEffect(() => {
@@ -128,58 +172,41 @@ const Room = () => {
         loadRoom();
       }
     }
-  }, [user?.profilePicture, room]);
+  }, [user, room, loadRoom]);
 
   useEffect(() => {
     fetchFriends();
-  }, []);
+  }, [fetchFriends]);
 
-  const loadRoom = async () => {
-    try {
-      setLoading(true);
-      const result = await getRoom(roomId);
-      if (result.success) {
-        setRoom(result.room);
-        loadRoomData(result.room);
-      } else {
-        setError('Erro ao carregar sala');
-      }
-    } catch {
-      setError('Erro ao carregar sala');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRoomData = (roomData) => {
-
-    const activeGoals = roomData.userIndividualGoals?.filter(goal => goal.isActive) || [];
-    setWeeklyGoals(activeGoals);
-    
-
-    const todayProgressData = roomData.userTodayProgress;
-    
-    if (todayProgressData) {
-      setTodayProgress(todayProgressData);
-      setDailyPercentage(todayProgressData.dailyPercentage || 0);
-    } else {
-      setTodayProgress(null);
-      setDailyPercentage(0);
+  const updateLocalProgress = (result) => {
+    if (result.todayProgress) {
+      setTodayProgress(result.todayProgress);
+      setDailyPercentage(result.todayProgress.dailyPercentage || 0);
     }
     
-
-    setOverallPercentage(roomData.userProgress?.overallPercentage || 0);
-    setCurrentWeek(roomData.userProgress?.currentWeek || 1);
+    if (result.weeklyProgress) {
+      setOverallPercentage(result.weeklyProgress.overallPercentage || 0);
+      setCurrentWeek(result.weeklyProgress.currentWeek || 1);
+    }
     
-  
-    const activeRoomGoals = roomData.roomGoals || [];
-    setRoomGoals(activeRoomGoals);
-    setRoomGoalProgress(roomData.roomGoalProgress || 0);
-    
-
-    const today = new Date();
-    if ((today.getDay() === 0 || today.getDay() === 6) && (roomData.userProgress?.overallPercentage || 0) > 0) {
-      setShowFeedback(true);
+    if (result.roomProgress) {
+      setRoomGoals(prevRoomGoals => {
+        const updatedRoomGoals = prevRoomGoals.map(goal => {
+          const goalCompletion = result.roomProgress.completedGoals.find(
+            cg => cg.goalId.toString() === goal._id.toString() && 
+                  cg.userId.toString() === user._id.toString()
+          );
+          
+          return {
+            ...goal,
+            userCompleted: goalCompletion ? goalCompletion.completed : false
+          };
+        });
+        
+        return updatedRoomGoals;
+      });
+      
+      setRoomGoalProgress(result.roomProgress.dailyPercentage || 0);
     }
   };
 
@@ -211,12 +238,10 @@ const Room = () => {
   };
 
   const handleToggleGoal = async (goalId, completed) => {
-    console.log('🎯 handleToggleGoal chamado:', { goalId, completed });
     try {
       const result = await completeGoal(roomId, goalId, completed);
-      console.log('✅ Resultado completeGoal:', result);
       if (result.success) {
-        await loadRoom(); 
+        updateLocalProgress(result);
         const message = completed ? 'Meta concluída! 🎉' : 'Meta desmarcada';
         showSuccess(message);
       }
@@ -253,11 +278,11 @@ const Room = () => {
     }
   };
 
-  const handleToggleRoomGoal = async (goalId, completed) => {
+    const handleToggleRoomGoal = async (goalId, completed) => {
     try {
       const result = await completeRoomGoal(roomId, goalId, completed);
       if (result.success) {
-        await loadRoom(); 
+        updateLocalProgress(result);
         const message = completed ? 'Meta da sala concluída! 🏠' : 'Meta da sala desmarcada';
         showSuccess(message);
       }
