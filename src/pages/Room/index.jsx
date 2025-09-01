@@ -788,7 +788,8 @@ const Room = () => {
             ← Voltar
           </BackButton>
           <RoomInfo>
-            <h1>
+            {/* Título Principal com Hierarquia Visual */}
+            <div className="room-title-section">
               {editingTitle ? (
                 <div className="edit-input-container">
                   <input
@@ -800,6 +801,7 @@ const Room = () => {
                     autoFocus
                     className="edit-input title-input"
                     disabled={saving}
+                    placeholder="Digite o nome da sala..."
                   />
                   <div className="edit-actions">
                     <button 
@@ -821,21 +823,53 @@ const Room = () => {
                   </div>
                 </div>
               ) : (
-                <div className="title-with-edit">
-                  <span>{room.name}</span>
-                  {canEdit && (
-                    <button 
-                      onClick={startEditingTitle}
-                      className="edit-icon-btn"
-                      title="Editar título"
-                    >
-                      ✏️
-                    </button>
-                  )}
+                <div className="room-title-enhanced">
+                  <div className="title-header">
+                    <h1 className="main-title">
+                      <span className="room-icon">🏠</span>
+                      <span className="title-text">{room.name}</span>
+                    </h1>
+                    {canEdit && (
+                      <button 
+                        onClick={startEditingTitle}
+                        className="edit-title-btn"
+                        title="Editar título"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="title-badges">
+                    <span className={`room-status-badge ${overallPercentage >= 75 ? 'active' : overallPercentage >= 50 ? 'medium' : 'inactive'}`}>
+                      {overallPercentage >= 75 ? '🟢 Ativa' : overallPercentage >= 50 ? '🟡 Média' : '🔴 Inativa'}
+                    </span>
+                    <span className="participants-count">
+                      👥 {room.participants?.length || 0} membros
+                    </span>
+                  </div>
+                  
+                  {/* Meta-informações */}
+                  <div className="room-meta-info">
+                    <div className="meta-item">
+                      <span className="meta-icon">📅</span>
+                      <span className="meta-text">Semana {currentWeek} de 12</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-icon">🎯</span>
+                      <span className="meta-text">{weeklyGoals.length + roomGoals.length} metas ativas</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-icon">📈</span>
+                      <span className="meta-text">{Math.round(overallPercentage)}% completo</span>
+                    </div>
+                  </div>
                 </div>
               )}
-            </h1>
-            <div>
+            </div>
+
+            {/* Descrição Melhorada */}
+            <div className="room-description-section">
               {editingDescription ? (
                 <div className="edit-input-container">
                   <input
@@ -846,7 +880,7 @@ const Room = () => {
                     onKeyPress={(e) => handleKeyPress(e, saveDescription)}
                     autoFocus
                     className="edit-input description-input"
-                    placeholder="Digite uma descrição..."
+                    placeholder="Digite uma descrição para esta sala..."
                     disabled={saving}
                   />
                   <div className="edit-actions">
@@ -869,19 +903,72 @@ const Room = () => {
                   </div>
                 </div>
               ) : (
-                <div className="description-with-edit">
-                  <span>{room.description || 'Sem descrição'}</span>
-                  {canEdit && (
-                    <button 
-                      onClick={startEditingDescription}
-                      className="edit-icon-btn"
-                      title="Editar descrição"
-                    >
-                      ✏️
-                    </button>
+                <div className="room-description-enhanced">
+                  {room.description ? (
+                    <div className="description-content">
+                      <p className="description-text">{room.description}</p>
+                      {canEdit && (
+                        <button 
+                          onClick={startEditingDescription}
+                          className="edit-description-btn"
+                          title="Editar descrição"
+                        >
+                          ✏️
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="no-description-state">
+                      <span className="no-desc-icon">📝</span>
+                      <span className="no-desc-text">Adicione uma descrição para esta sala</span>
+                      {canEdit && (
+                        <button 
+                          onClick={startEditingDescription}
+                          className="add-description-btn"
+                          title="Adicionar descrição"
+                        >
+                          Adicionar
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Estatísticas da Sala */}
+            <div className="room-stats-header">
+              <div className="stat-card">
+                <div className="stat-icon">👥</div>
+                <div className="stat-content">
+                  <span className="stat-value">{room.participants?.length || 0}</span>
+                  <span className="stat-label">Participantes</span>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">🎯</div>
+                <div className="stat-content">
+                  <span className="stat-value">{weeklyGoals.length + roomGoals.length}</span>
+                  <span className="stat-label">Metas Ativas</span>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">⚡</div>
+                <div className="stat-content">
+                  <span className="stat-value">{Math.round(dailyPercentage)}%</span>
+                  <span className="stat-label">Hoje</span>
+                </div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">🏆</div>
+                <div className="stat-content">
+                  <span className="stat-value">{Math.round(overallPercentage)}%</span>
+                  <span className="stat-label">Geral</span>
+                </div>
+              </div>
             </div>
           </RoomInfo>
         </Header>
