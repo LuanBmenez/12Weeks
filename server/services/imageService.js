@@ -25,27 +25,27 @@ class ImageService {
         format = 'jpeg'
       } = options;
 
-      // Verifica se o arquivo existe
+    
       if (!fs.existsSync(inputPath)) {
         throw new Error(`Arquivo não encontrado: ${inputPath}`);
       }
 
-      // Obtém informações da imagem original
+      
       const originalStats = fs.statSync(inputPath);
       const originalSizeKB = Math.round(originalStats.size / 1024);
 
       console.log(`🖼️ Comprimindo imagem: ${path.basename(inputPath)} (${originalSizeKB}KB)`);
 
-      // Cria o diretório de saída se não existir
+      
       const outputDir = path.dirname(outputPath);
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
 
-      // Processa a imagem com Sharp
+      
       let sharpInstance = sharp(inputPath);
 
-      // Redimensiona se necessário
+      
       const metadata = await sharpInstance.metadata();
       if (metadata.width > maxWidth || metadata.height > maxHeight) {
         sharpInstance = sharpInstance.resize(maxWidth, maxHeight, {
@@ -55,7 +55,7 @@ class ImageService {
         console.log(`📏 Redimensionando de ${metadata.width}x${metadata.height} para máximo ${maxWidth}x${maxHeight}`);
       }
 
-      // Aplica compressão baseada no formato
+      
       switch (format.toLowerCase()) {
         case 'webp':
           sharpInstance = sharpInstance.webp({ quality });
@@ -80,10 +80,10 @@ class ImageService {
           break;
       }
 
-      // Salva a imagem comprimida
+      
       await sharpInstance.toFile(outputPath);
 
-      // Obtém estatísticas da imagem comprimida
+      
       const compressedStats = fs.statSync(outputPath);
       const compressedSizeKB = Math.round(compressedStats.size / 1024);
       const compressionRatio = Math.round(((originalSizeKB - compressedSizeKB) / originalSizeKB) * 100);
@@ -108,7 +108,7 @@ class ImageService {
   }
 
   /**
-   * Comprime imagem de perfil com configurações otimizadas
+   * 
    * @param {string} inputPath - Caminho da imagem original
    * @param {string} outputPath - Caminho onde salvar a imagem comprimida
    */
@@ -122,7 +122,7 @@ class ImageService {
   }
 
   /**
-   * Gera múltiplos tamanhos de uma imagem
+   * 
    * @param {string} inputPath - Caminho da imagem original
    * @param {string} baseOutputPath - Caminho base para as saídas
    */
@@ -154,7 +154,6 @@ class ImageService {
   }
 
   /**
-   * Converte imagem para WebP (formato mais eficiente)
    * @param {string} inputPath - Caminho da imagem original
    * @param {string} outputPath - Caminho onde salvar a imagem WebP
    */
@@ -168,7 +167,7 @@ class ImageService {
   }
 
   /**
-   * Converte imagem para AVIF (formato mais moderno e eficiente)
+
    * @param {string} inputPath - Caminho da imagem original
    * @param {string} outputPath - Caminho onde salvar a imagem AVIF
    */
@@ -182,7 +181,7 @@ class ImageService {
   }
 
   /**
-   * Verifica se o arquivo é uma imagem válida
+ 
    * @param {string} filePath - Caminho do arquivo
    */
   async isValidImage(filePath) {
@@ -195,7 +194,6 @@ class ImageService {
   }
 
   /**
-   * Obtém metadados da imagem
    * @param {string} filePath - Caminho do arquivo
    */
   async getImageMetadata(filePath) {
@@ -217,7 +215,6 @@ class ImageService {
   }
 
   /**
-   * Otimiza imagem automaticamente baseada no tamanho original
    * @param {string} inputPath - Caminho da imagem original
    * @param {string} outputPath - Caminho onde salvar a imagem otimizada
    */
@@ -228,20 +225,20 @@ class ImageService {
         throw new Error('Não foi possível obter metadados da imagem');
       }
 
-      // Determina configurações baseadas no tamanho original
+     
       let maxWidth, maxHeight, quality, format;
 
-      if (metadata.sizeKB > 1000) { // > 1MB
+      if (metadata.sizeKB > 1000) { 
         maxWidth = 600;
         maxHeight = 600;
         quality = 75;
         format = 'webp';
-      } else if (metadata.sizeKB > 500) { // > 500KB
+      } else if (metadata.sizeKB > 500) { 
         maxWidth = 800;
         maxHeight = 800;
         quality = 80;
         format = 'jpeg';
-      } else { // < 500KB
+      } else { 
         maxWidth = 1000;
         maxHeight = 1000;
         quality = 85;
@@ -265,7 +262,6 @@ class ImageService {
   }
 
   /**
-   * Limpa arquivos temporários
    * @param {string} tempPath - Caminho do arquivo temporário
    */
   async cleanupTempFile(tempPath) {
@@ -280,7 +276,7 @@ class ImageService {
   }
 }
 
-// Singleton instance
+
 const imageService = new ImageService();
 
 export default imageService;

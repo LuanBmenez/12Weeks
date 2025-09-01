@@ -33,19 +33,19 @@ const messageSchema = new mongoose.Schema({
   }
 });
 
-// Índices para otimização
+
 messageSchema.index({ room: 1, timestamp: -1 });
 messageSchema.index({ author: 1, timestamp: -1 });
 messageSchema.index({ timestamp: 1 }, { expireAfterSeconds: 86400 * 2 });
 
-// Método para marcar mensagem como editada
+
 messageSchema.methods.markAsEdited = function() {
   this.edited = true;
   this.editedAt = new Date();
   return this.save();
 };
 
-// Método para verificar se o usuário pode editar a mensagem
+
 messageSchema.methods.canEdit = function(userId) {
   return this.author.toString() === userId.toString();
 };

@@ -423,14 +423,13 @@ router.post('/reset-password', newPasswordValidation, async (req, res) => {
 });
 
 
-// Função utilitária para extrair o nome do arquivo da URL da foto de perfil
 const extractFilenameFromUrl = (url) => {
   if (!url) return null;
   const parts = url.split('/');
   return parts[parts.length - 1];
 };
 
-// Função para remover arquivo de foto antiga
+
 const removeOldProfilePicture = async (oldProfilePictureUrl) => {
   if (!oldProfilePictureUrl) return;
   
@@ -440,14 +439,14 @@ const removeOldProfilePicture = async (oldProfilePictureUrl) => {
     
     const filePath = path.join(process.cwd(), 'uploads', 'profile-pictures', filename);
     
-    // Verifica se o arquivo existe antes de tentar removê-lo
+
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
       console.log(`Foto antiga removida: ${filename}`);
     }
   } catch (error) {
     console.error('Erro ao remover foto antiga:', error);
-    // Não falha o upload se não conseguir remover a foto antiga
+
   }
 };
 
@@ -457,33 +456,33 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
       return res.status(400).json({ message: 'Nenhuma imagem foi enviada' });
     }
 
-    // Busca o usuário atual para obter a foto antiga
+
     const currentUser = await User.findById(req.user._id);
     if (!currentUser) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    // Remove a foto antiga se existir
+
     if (currentUser.profilePicture) {
       await removeOldProfilePicture(currentUser.profilePicture);
     }
 
-    // Caminhos dos arquivos
+
     const originalPath = req.file.path;
     const compressedPath = originalPath.replace(path.extname(originalPath), '_compressed.jpg');
     
-    // Comprime a imagem automaticamente
+
     console.log('🖼️ Iniciando compressão da imagem...');
     const compressionResult = await imageService.compressProfilePicture(originalPath, compressedPath);
     
     if (!compressionResult.success) {
       console.error('Erro na compressão:', compressionResult.error);
-      // Se a compressão falhar, usa a imagem original
+
       fs.unlinkSync(originalPath);
       return res.status(500).json({ message: 'Erro ao processar a imagem' });
     }
 
-    // Remove a imagem original não comprimida
+
     try {
       fs.unlinkSync(originalPath);
       console.log('🗑️ Imagem original removida');
@@ -491,22 +490,22 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
       console.error('Erro ao remover imagem original:', error);
     }
 
-    // Renomeia o arquivo comprimido para o nome original
+
     const finalPath = originalPath;
     fs.renameSync(compressedPath, finalPath);
 
-    // Cria a URL da nova foto
+
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const profilePictureUrl = `${baseUrl}/api/image/profile-pictures/${req.file.filename}`;
 
-    // Atualiza o usuário com a nova foto
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { profilePicture: profilePictureUrl },
       { new: true }
     ).select('-password -resetPasswordToken -resetPasswordExpires');
 
-    // Invalida cache do usuário
+    
     await cacheService.invalidateUserCache(req.user._id);
 
     res.json({
@@ -526,11 +525,10 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
   }
 });
 
-// Endpoint para limpar fotos órfãs (fotos não referenciadas por nenhum usuário)
+
 router.post('/cleanup-orphaned-photos', auth, async (req, res) => {
   try {
-    // Verifica se o usuário é admin (você pode implementar uma verificação de admin aqui)
-    // Por enquanto, qualquer usuário autenticado pode executar esta operação
+    
     
     const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-pictures');
     
@@ -541,7 +539,7 @@ router.post('/cleanup-orphaned-photos', auth, async (req, res) => {
       });
     }
 
-    // Busca todas as fotos de perfil atualmente em uso
+
     const users = await User.find({ profilePicture: { $exists: true, $ne: null } })
       .select('profilePicture');
     
@@ -553,11 +551,11 @@ router.post('/cleanup-orphaned-photos', auth, async (req, res) => {
       }
     });
 
-    // Lista todos os arquivos no diretório
+
     const files = fs.readdirSync(uploadsDir);
     let deletedCount = 0;
 
-    // Remove arquivos que não estão sendo usados
+
     files.forEach(filename => {
       if (!usedFilenames.has(filename)) {
         try {
@@ -584,7 +582,7 @@ router.post('/cleanup-orphaned-photos', auth, async (req, res) => {
   }
 });
 
-// Endpoint para monitorar status do cache e compressão
+
 router.get('/system-status', auth, async (req, res) => {
   try {
     const cacheStats = await cacheService.getStats();

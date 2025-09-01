@@ -127,7 +127,7 @@ class CacheService {
     }
   }
 
-  // Métodos específicos para o sistema 12Weeks
+
   async cacheUser(userId, userData, ttlSeconds = 1800) {
     return await this.set(`user:${userId}`, userData, ttlSeconds);
   }
@@ -168,7 +168,7 @@ class CacheService {
     return await this.get(`notifications:${userId}`);
   }
 
-  // Invalidar cache quando dados são atualizados
+  
   async invalidateUserCache(userId) {
     await this.del(`user:${userId}`);
     await this.del(`friends:${userId}`);
@@ -184,7 +184,7 @@ class CacheService {
     await this.del(`friends:${userId}`);
   }
 
-  // Cache com tags para invalidação em lote
+  
   async setWithTags(key, value, tags = [], ttlSeconds = 3600) {
     const success = await this.set(key, value, ttlSeconds);
     if (success && tags.length > 0) {
@@ -214,7 +214,7 @@ class CacheService {
     }
   }
 
-  // Estatísticas do cache
+  
   async getStats() {
     if (!this.isConnected || !this.client) {
       return null;
@@ -231,7 +231,7 @@ class CacheService {
   }
 }
 
-// Singleton instance
+
 const cacheService = new CacheService();
 
 export default cacheService;

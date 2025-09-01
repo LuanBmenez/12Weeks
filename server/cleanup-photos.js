@@ -1,30 +1,23 @@
-#!/usr/bin/env node
 
-/**
- * Script para limpar fotos órfãs do sistema
- * Este script pode ser executado manualmente ou via cron job
- * 
- * Uso: node cleanup-photos.js
- */
 
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import User from './models/User.js';
 
-// Função para extrair o nome do arquivo da URL
+
 const extractFilenameFromUrl = (url) => {
   if (!url) return null;
   const parts = url.split('/');
   return parts[parts.length - 1];
 };
 
-// Função principal de limpeza
+
 const cleanupOrphanedPhotos = async () => {
   try {
     console.log('🧹 Iniciando limpeza de fotos órfãs...');
     
-    // Conecta ao MongoDB
+
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/12weeks');
     console.log('✅ Conectado ao MongoDB');
 
@@ -35,7 +28,7 @@ const cleanupOrphanedPhotos = async () => {
       return;
     }
 
-    // Busca todas as fotos de perfil atualmente em uso
+
     const users = await User.find({ profilePicture: { $exists: true, $ne: null } })
       .select('profilePicture');
     
@@ -49,14 +42,14 @@ const cleanupOrphanedPhotos = async () => {
 
     console.log(`📊 Fotos em uso: ${usedFilenames.size}`);
 
-    // Lista todos os arquivos no diretório
+
     const files = fs.readdirSync(uploadsDir);
     console.log(`📁 Total de arquivos no diretório: ${files.length}`);
 
     let deletedCount = 0;
     const orphanedFiles = [];
 
-    // Identifica arquivos órfãos
+ 
     files.forEach(filename => {
       if (!usedFilenames.has(filename)) {
         orphanedFiles.push(filename);
@@ -65,7 +58,7 @@ const cleanupOrphanedPhotos = async () => {
 
     console.log(`🗑️  Arquivos órfãos encontrados: ${orphanedFiles.length}`);
 
-    // Remove arquivos órfãos
+
     orphanedFiles.forEach(filename => {
       try {
         const filePath = path.join(uploadsDir, filename);
@@ -104,7 +97,7 @@ const cleanupOrphanedPhotos = async () => {
   }
 };
 
-// Executa a limpeza se o script for chamado diretamente
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   cleanupOrphanedPhotos();
 }

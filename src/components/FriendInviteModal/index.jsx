@@ -66,11 +66,13 @@ export default function FriendInviteModal({ isOpen, onClose }) {
 
   const handleSearch = () => {
     if (searchCode.trim()) {
+      clearSearch(); 
       searchUserByCode(searchCode.trim());
     }
   };
 
   const handleSendRequest = async (code) => {
+    clearSearch();
     const result = await sendFriendRequest(code);
     if (result.success) {
       showNotification(result.message, 'success');

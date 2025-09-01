@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { useNotifications } from './useNotifications';
 import api from '../config/api';
 
 export const useFriends = () => {
   const { user } = useAuth();
-  const { addNotification } = useNotifications();
   const [friendCode, setFriendCode] = useState('');
   const [searchResult, setSearchResult] = useState(null);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -49,22 +47,28 @@ export const useFriends = () => {
 
   const sendFriendRequest = async (code) => {
     try {
+      console.log('=== FRONTEND: Enviando solicitação de amizade ===');
+      console.log('Código:', code);
+      
       setLoading(true);
       setError('');
-      await api.post('/friends/request', { friendCode: code });
+      
+      console.log('📤 Fazendo requisição para /friends/request...');
+      const response = await api.post('/friends/request', { friendCode: code });
+      
+      console.log('✅ Resposta recebida:', response.data);
+      console.log('Status:', response.status);
+      
+      setError('');
       setSearchResult(null);
       
-
-      addNotification({
-        _id: Date.now().toString(), 
-        type: 'friend_request',
-        message: `Solicitação de amizade enviada para ${searchResult?.user?.name}`,
-        read: false,
-        createdAt: new Date().toISOString()
-      });
-      
+      console.log('✅ Retornando sucesso');
       return { success: true, message: 'Solicitação enviada com sucesso!' };
     } catch (error) {
+      console.log('❌ Erro capturado:', error);
+      console.log('Status do erro:', error.response?.status);
+      console.log('Dados do erro:', error.response?.data);
+      
       const message = error.response?.data?.message || 'Erro ao enviar solicitação';
       setError(message);
       return { success: false, message };

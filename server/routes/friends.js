@@ -58,8 +58,12 @@ router.post('/request', auth, [
     .withMessage('Código de amigo deve ter 8 caracteres')
 ], invalidateCacheMiddleware(['friends:{userId}', 'notifications:{userId}']), async (req, res) => {
   try {
+    console.log('=== INÍCIO DA SOLICITAÇÃO DE AMIZADE ===');
+    console.log('Usuário atual:', req.user.name, 'ID:', req.user._id);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Erro de validação:', errors.array());
       return res.status(400).json({ 
         message: 'Dados inválidos',
         errors: errors.array() 
@@ -68,43 +72,43 @@ router.post('/request', auth, [
 
     const { friendCode } = req.body;
     const currentUserId = req.user._id;
+    console.log('Código de amigo recebido:', friendCode);
 
         
     if (req.user.friendCode === friendCode.toUpperCase()) {
+      console.log('❌ Usuário tentando se adicionar como amigo');
       return res.status(400).json({ message: 'Você não pode se adicionar como amigo' });
     }
 
     
     const targetUser = await User.findOne({ friendCode: friendCode.toUpperCase() });
     if (!targetUser) {
+      console.log('❌ Usuário não encontrado para o código:', friendCode);
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
+    console.log('✅ Usuário alvo encontrado:', targetUser.name, 'ID:', targetUser._id);
 
     
     if (req.user.friends.includes(targetUser._id)) {
+      console.log('❌ Usuários já são amigos');
       return res.status(400).json({ message: 'Vocês já são amigos' });
     }
 
     
-    const existingRequest = req.user.friendRequests.find(
-      request => request.from.toString() === targetUser._id.toString() && request.status === 'pending'
+    const existingRequest = targetUser.friendRequests.find(
+      request => request.from.toString() === currentUserId.toString() && request.status === 'pending'
     );
 
     if (existingRequest) {
+      console.log('❌ Já existe uma solicitação pendente');
       return res.status(400).json({ message: 'Já existe uma solicitação pendente' });
     }
+    console.log('✅ Nenhuma solicitação pendente encontrada');
 
     
-    // await User.findByIdAndUpdate(currentUserId, {
-    //   $push: {
-    //     friendRequests: {
-    //       from: targetUser._id,
-    //       status: 'pending'
-    //     }
-    //   }
-    // });
+   
 
-    
+    console.log('📤 Enviando solicitação para o usuário alvo...');
     await User.findByIdAndUpdate(targetUser._id, {
       $push: {
         friendRequests: {
@@ -120,10 +124,11 @@ router.post('/request', auth, [
       }
     });
 
+    console.log('✅ Solicitação enviada com sucesso!');
     res.json({ message: 'Solicitação de amizade enviada com sucesso' });
 
   } catch (error) {
-    console.error('Erro ao enviar solicitação:', error);
+    console.error('❌ Erro ao enviar solicitação:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });

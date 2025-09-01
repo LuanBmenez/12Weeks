@@ -155,10 +155,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/12weeks')
   .then(() => console.log('✅ Conectado ao MongoDB'))
   .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
 
-// Conecta ao Redis
+
 cacheService.connect().catch((error) => {
   console.error('❌ Erro ao conectar com Redis:', error);
-  // Não encerra o processo se Redis falhar, apenas continua sem cache
+
 });
 
 
@@ -183,7 +183,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/rooms', roomRoutes);
 
-// Rota estática para imagens - deve vir depois das rotas da API
 app.use('/api/image/profile-pictures', express.static(path.join(process.cwd(), 'uploads/profile-pictures')));
 
 io.on('connection', (socket) => {
@@ -224,7 +223,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Nova funcionalidade: editar mensagem
+  
   socket.on('edit_message', async (data) => {
     try {
       const { messageId, userId, newMessage } = data;
