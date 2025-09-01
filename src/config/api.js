@@ -1,7 +1,8 @@
 import axios from 'axios';
+import config from './config.js';
 
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:3001/api',
+  BASE_URL: config.API_BASE_URL,
   ENDPOINTS: {
     AUTH: {
       REGISTER: '/auth/register',
@@ -38,7 +39,7 @@ const API_CONFIG = {
 
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
-  timeout: 10000,
+  timeout: config.API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json'
   }

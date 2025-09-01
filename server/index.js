@@ -19,12 +19,15 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: isProduction 
+      ? [process.env.FRONTEND_URL, 'https://12-weeks.vercel.app'].filter(Boolean)
+      : (process.env.FRONTEND_URL || "http://localhost:5173"),
     methods: ["GET", "POST"]
   }
 });
 
 const PORT = process.env.PORT || 3001;
+const isProduction = process.env.NODE_ENV === 'production';
 
 
 
@@ -34,9 +37,9 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http://localhost:3001", "http://localhost:5173"],
+      imgSrc: ["'self'", "data:", "https:", "http://localhost:3001", "http://localhost:5173", "https://12-weeks.vercel.app"],
       fontSrc: ["'self'", "https:"],
-      connectSrc: ["'self'", "https:", "http://localhost:3001"],
+      connectSrc: ["'self'", "https:", "http://localhost:3001", "https://one2weeks.onrender.com", "https://12-weeks.vercel.app"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
@@ -63,7 +66,9 @@ const corsOptions = {
     const allowedOrigins = [
       process.env.FRONTEND_URL,
       'http://localhost:5173',
-      'http://localhost:3000'
+      'http://localhost:3000',
+      'https://one2weeks.onrender.com',
+      'https://12-weeks.vercel.app'
     ].filter(Boolean);
     
     if (allowedOrigins.includes(origin)) {
@@ -254,5 +259,10 @@ app.use((err, req, res) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  if (isProduction) {
+    console.log(`🚀 Servidor rodando em produção na porta ${PORT}`);
+    console.log(`🌐 URL pública: https://one2weeks.onrender.com`);
+  } else {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+  }
 });
