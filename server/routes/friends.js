@@ -2,11 +2,18 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import { auth } from '../middleware/auth.js';
+import { 
+  cacheFriendsMiddleware, 
+  cacheUserSearchMiddleware, 
+  cacheNotificationsMiddleware,
+  invalidateCacheMiddleware 
+} from '../middleware/cache.js';
+import cacheService from '../services/cacheService.js';
 
 const router = express.Router();
 
 
-router.get('/search/:friendCode', auth, async (req, res) => {
+router.get('/search/:friendCode', auth, cacheUserSearchMiddleware(), async (req, res) => {
   try {
     const { friendCode } = req.params;
     
@@ -49,7 +56,7 @@ router.post('/request', auth, [
   body('friendCode')
     .isLength({ min: 8, max: 8 })
     .withMessage('Código de amigo deve ter 8 caracteres')
-], async (req, res) => {
+], invalidateCacheMiddleware(['friends:{userId}', 'notifications:{userId}']), async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -213,7 +220,7 @@ router.get('/requests', auth, async (req, res) => {
 });
 
 
-router.get('/list', auth, async (req, res) => {
+router.get('/list', auth, cacheFriendsMiddleware(), async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
       .populate('friends', 'name friendCode')
@@ -239,7 +246,7 @@ router.get('/my-code', auth, async (req, res) => {
 });
 
 
-router.get('/notifications', auth, async (req, res) => {
+router.get('/notifications', auth, cacheNotificationsMiddleware(), async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
       .populate('notifications.from', 'name')

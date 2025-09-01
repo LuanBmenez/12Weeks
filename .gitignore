@@ -127,3 +127,13 @@ test-results/
 coverage/
 *.test.js.snap
 
+# Uploads and user data
+server/uploads/
+server/test-email.js
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+

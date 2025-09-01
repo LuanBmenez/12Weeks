@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.js';
 import friendRoutes from './routes/friends.js';
 import roomRoutes from './routes/rooms.js';
 import emailService from './services/emailService.js';
+import cacheService from './services/cacheService.js';
 
 dotenv.config({ path: './.env' });
 
@@ -153,6 +154,12 @@ app.get('/api/image/:folder/:filename', cors(corsOptions), (req, res) => {
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/12weeks')
   .then(() => console.log('✅ Conectado ao MongoDB'))
   .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
+
+// Conecta ao Redis
+cacheService.connect().catch((error) => {
+  console.error('❌ Erro ao conectar com Redis:', error);
+  // Não encerra o processo se Redis falhar, apenas continua sem cache
+});
 
 
 if (process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD) {

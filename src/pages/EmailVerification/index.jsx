@@ -111,7 +111,7 @@ const EmailVerification = () => {
       }
 
       
-      console.log('Fazendo login com:', { user: data.user, token: data.token });
+      console.log('Fazendo login com usuário:', data.user.username);
       loginWithToken(data.user, data.token);
       showSuccess('Conta criada com sucesso! Bem-vindo ao 12Weeks! 🎉');
 

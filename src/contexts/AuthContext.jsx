@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
 
  
   const loginWithToken = (user, token) => {
-    console.log('loginWithToken chamado com:', { user, token });
+    console.log('loginWithToken chamado para usuário:', user?.username);
     
     setUser(user);
     setToken(token);
