@@ -10,7 +10,7 @@ import PendingUser from '../models/PendingUser.js';
 import { auth } from '../middleware/auth.js';
 import emailService from '../services/emailService.js';
 import imageService from '../services/imageService.js';
-import cacheService from '../services/cacheService.js';
+
 
 const router = express.Router();
 
@@ -505,8 +505,7 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
       { new: true }
     ).select('-password -resetPasswordToken -resetPasswordExpires');
 
-    
-    await cacheService.invalidateUserCache(req.user._id);
+
 
     res.json({
       message: 'Foto do perfil atualizada com sucesso',
@@ -585,14 +584,7 @@ router.post('/cleanup-orphaned-photos', auth, async (req, res) => {
 
 router.get('/system-status', auth, async (req, res) => {
   try {
-    const cacheStats = await cacheService.getStats();
-    const redisStatus = cacheService.isConnected;
-    
     res.json({
-      cache: {
-        connected: redisStatus,
-        stats: cacheStats
-      },
       imageCompression: {
         enabled: true,
         supportedFormats: ['jpeg', 'jpg', 'png', 'webp', 'avif'],

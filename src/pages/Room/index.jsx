@@ -126,6 +126,7 @@ const Room = () => {
   
   
   const [expandedParticipants, setExpandedParticipants] = useState(new Set());
+  const [updatingParticipants, setUpdatingParticipants] = useState(new Set());
 
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
@@ -208,6 +209,88 @@ const Room = () => {
       
       setRoomGoalProgress(result.roomProgress.dailyPercentage || 0);
     }
+
+    // Atualizar progresso dos participantes
+    if (result.todayProgress && user) {
+      // Adicionar animação de atualização
+      setUpdatingParticipants(prev => new Set([...prev, user._id]));
+      
+      setRoom(prevRoom => {
+        if (!prevRoom || !prevRoom.participants) return prevRoom;
+        
+        const updatedParticipants = prevRoom.participants.map(participant => {
+          if (participant.user._id === user._id) {
+            return {
+              ...participant,
+              progress: {
+                ...participant.progress,
+                hasGoals: true,
+                dailyPercentage: result.todayProgress.dailyPercentage || 0,
+                goals: result.todayProgress.completedGoals || []
+              }
+            };
+          }
+          return participant;
+        });
+        
+        return {
+          ...prevRoom,
+          participants: updatedParticipants
+        };
+      });
+      
+      // Remover animação após 600ms
+      setTimeout(() => {
+        setUpdatingParticipants(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(user._id);
+          return newSet;
+        });
+      }, 600);
+    }
+
+    // Atualizar progresso dos participantes para metas da sala
+    if (result.roomProgress && user) {
+      // Adicionar animação de atualização
+      setUpdatingParticipants(prev => new Set([...prev, user._id]));
+      
+      setRoom(prevRoom => {
+        if (!prevRoom || !prevRoom.participants) return prevRoom;
+        
+        const updatedParticipants = prevRoom.participants.map(participant => {
+          if (participant.user._id === user._id) {
+            // Calcular novo progresso combinado (individual + sala)
+            const individualProgress = participant.progress?.dailyPercentage || 0;
+            const roomProgress = result.roomProgress.dailyPercentage || 0;
+            const combinedProgress = Math.round((individualProgress + roomProgress) / 2);
+            
+            return {
+              ...participant,
+              progress: {
+                ...participant.progress,
+                hasGoals: true,
+                dailyPercentage: combinedProgress
+              }
+            };
+          }
+          return participant;
+        });
+        
+        return {
+          ...prevRoom,
+          participants: updatedParticipants
+        };
+      });
+      
+      // Remover animação após 600ms
+      setTimeout(() => {
+        setUpdatingParticipants(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(user._id);
+          return newSet;
+        });
+      }, 600);
+    }
   };
 
   const handleGoalChange = (index, value) => {
@@ -244,6 +327,11 @@ const Room = () => {
         updateLocalProgress(result);
         const message = completed ? 'Meta concluída! 🎉' : 'Meta desmarcada';
         showSuccess(message);
+        
+        // Disparar animação de celebração se completou uma meta
+        if (completed && user) {
+          triggerCelebration(user._id);
+        }
       }
     } catch (err) {
       console.error('❌ Erro ao atualizar progresso:', err);
@@ -285,6 +373,11 @@ const Room = () => {
         updateLocalProgress(result);
         const message = completed ? 'Meta da sala concluída! 🏠' : 'Meta da sala desmarcada';
         showSuccess(message);
+        
+        // Disparar animação de celebração se completou uma meta da sala
+        if (completed && user) {
+          triggerCelebration(user._id);
+        }
       }
     } catch (err) {
       console.error('Erro ao atualizar progresso da meta da sala:', err);
@@ -511,6 +604,127 @@ const Room = () => {
       return participant.progress.dailyPercentage || 0;
     }
     return 0;
+  };
+
+  const getParticipantCardClass = (participant) => {
+    const progress = getParticipantProgress(participant);
+    const completedGoals = participant.progress?.goals?.filter(g => g.completed).length || 0;
+    const totalGoals = participant.progress?.goals?.length || 0;
+    const isAllCompleted = completedGoals === totalGoals && totalGoals > 0;
+    const isUpdating = updatingParticipants.has(participant.user._id);
+    
+    let baseClass = 'participant-card-modern';
+    
+    // Classes baseadas no progresso
+    if (progress >= 100) {
+      baseClass += ' progress-excellent';
+    } else if (progress >= 75) {
+      baseClass += ' progress-good';
+    } else if (progress >= 50) {
+      baseClass += ' progress-average';
+    } else {
+      baseClass += ' progress-poor';
+    }
+    
+    // Adicionar animações especiais
+    if (isAllCompleted) {
+      baseClass += ' stars';
+    }
+    
+    // Adicionar classe de atualização
+    if (isUpdating) {
+      baseClass += ' updating';
+    }
+    
+    return baseClass;
+  };
+
+  const triggerCelebration = (participantId) => {
+    // Adicionar classe de celebração temporariamente
+    const element = document.querySelector(`[data-participant-id="${participantId}"]`);
+    if (element) {
+      element.classList.add('celebration');
+      setTimeout(() => {
+        element.classList.remove('celebration');
+      }, 2000);
+    }
+  };
+
+  const getHotStreak = (participant) => {
+    // Usar dados reais do progresso para calcular hot streak
+    const progress = getParticipantProgress(participant);
+    const completedGoals = participant.progress?.goals?.filter(g => g.completed).length || 0;
+    const totalGoals = participant.progress?.goals?.length || 0;
+    
+    // Só mostra hot streak se tem progresso significativo
+    if (progress > 0 && totalGoals > 0) {
+      // Calcular streak baseado no progresso atual e consistência
+      const completionRate = completedGoals / totalGoals;
+      
+      if (progress >= 100 && completionRate === 1) {
+        // Progresso perfeito - streak alto
+        return Math.min(Math.floor(progress / 15), 7); // Máximo 7 dias
+      } else if (progress >= 75 && completionRate >= 0.8) {
+        // Progresso muito bom - streak médio
+        return Math.min(Math.floor(progress / 20), 5); // Máximo 5 dias
+      } else if (progress >= 50 && completionRate >= 0.6) {
+        // Progresso bom - streak baixo
+        return Math.min(Math.floor(progress / 25), 3); // Máximo 3 dias
+      } else if (progress >= 25) {
+        // Progresso básico - streak mínimo
+        return 1;
+      }
+    }
+    return 0;
+  };
+
+  const getLastActivity = (participant) => {
+    // Usar dados reais de última atividade baseados no progresso
+    const progress = getParticipantProgress(participant);
+    const totalGoals = participant.progress?.goals?.length || 0;
+    
+    // Se é o usuário atual, sempre mostra como ativo
+    if (participant.user._id === user?._id) {
+      return { text: 'Ativo agora', class: 'active' };
+    }
+    
+    // Se tem progresso hoje, considera ativo baseado na quantidade
+    if (progress > 0) {
+      if (progress >= 100) {
+        return { text: 'Ativo agora', class: 'active' };
+      } else if (progress >= 75) {
+        return { text: 'Ativo há 1h', class: 'active' };
+      } else if (progress >= 50) {
+        return { text: 'Ativo há 2h', class: 'active' };
+      } else if (progress >= 25) {
+        return { text: 'Ativo há 3h', class: 'inactive' };
+      } else {
+        return { text: 'Ativo há 4h', class: 'inactive' };
+      }
+    }
+    
+    // Se não tem progresso hoje, verifica se tem metas definidas
+    if (totalGoals > 0) {
+      return { text: 'Ativo há 6h', class: 'inactive' };
+    }
+    
+    // Se não tem metas definidas
+    return { text: 'Sem atividade', class: 'inactive' };
+  };
+
+  const getStreakBadgeClass = (streakDays) => {
+    if (streakDays >= 7) return 'streak-7';
+    if (streakDays >= 5) return 'streak-5';
+    if (streakDays >= 3) return 'streak-3';
+    return '';
+  };
+
+  const getProgressCardClass = (percentage) => {
+    if (percentage >= 100) return 'progress-excellent';
+    if (percentage >= 75) return 'progress-good';
+    if (percentage >= 50) return 'progress-average';
+    if (percentage >= 25) return 'progress-poor';
+    return '';
   };
 
   const isFriendAlreadyInRoom = (friendId) => {
@@ -897,9 +1111,12 @@ const Room = () => {
 
             
           <ProgressSection>
-            <ProgressCard className="modern-card">
+            <ProgressCard className={`modern-card ${getProgressCardClass(dailyPercentage)}`}>
               <div className="card-header">
-                <div className="card-icon today">📊</div>
+                <div className={`card-icon today modern-icon ${Math.round(dailyPercentage) === 100 ? 'perfect-progress' : ''}`}>
+                  <span className="icon-emoji">⚡</span>
+                  <div className="icon-glow"></div>
+                </div>
                 <div className="card-title">
                   <h3>Hoje</h3>
                   <span className="card-subtitle">Progresso diário</span>
@@ -934,9 +1151,12 @@ const Room = () => {
               </div>
             </ProgressCard>
 
-            <ProgressCard className="modern-card">
+            <ProgressCard className={`modern-card ${getProgressCardClass(overallPercentage)}`}>
               <div className="card-header">
-                <div className="card-icon overall">🎯</div>
+                <div className={`card-icon overall modern-icon ${Math.round(overallPercentage) === 100 ? 'perfect-progress' : ''}`}>
+                  <span className="icon-emoji">🏆</span>
+                  <div className="icon-glow"></div>
+                </div>
                 <div className="card-title">
                   <h3>12 Semanas</h3>
                   <span className="card-subtitle">Progresso geral</span>
@@ -962,7 +1182,7 @@ const Room = () => {
                 <div className="detail-item">
                   <span className="detail-icon">⭐</span>
                   <span className="detail-text">Todas as metas</span>
-                  <span className="detail-count">Combinado</span>
+                  <span className="detail-count">Completo</span>
                 </div>
               </div>
             </ProgressCard>
@@ -1088,7 +1308,11 @@ const Room = () => {
 
             <div className="modern-participants-grid">
               {room.participants?.map((participant) => (
-                <div key={participant.user._id} className="participant-card-modern">
+                <div 
+                  key={participant.user._id} 
+                  className={getParticipantCardClass(participant)}
+                  data-participant-id={participant.user._id}
+                >
                   <div className="participant-header">
                     <div className="participant-avatar">
                       {participant.user.profilePicture ? (
@@ -1114,6 +1338,24 @@ const Room = () => {
                         <span className={`role-badge ${participant.role}`}>
                           {participant.role === 'admin' ? '👑 Admin' : '👤 Membro'}
                         </span>
+                        
+                        {(() => {
+                          const streakDays = getHotStreak(participant);
+                          const activity = getLastActivity(participant);
+                          
+                          return (
+                            <>
+                              {streakDays > 0 && (
+                                <span className={`hot-streak-badge ${getStreakBadgeClass(streakDays)}`}>
+                                  🔥 {streakDays} dias
+                                </span>
+                              )}
+                              <span className={`activity-badge ${activity.class}`}>
+                                {activity.text}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
