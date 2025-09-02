@@ -22,6 +22,10 @@ const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 const io = new Server(httpServer, {
   cors: {
     origin: isProduction 

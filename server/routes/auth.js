@@ -495,7 +495,8 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
     fs.renameSync(compressedPath, finalPath);
 
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
+    const baseUrl = `${protocol}://${req.get('host')}`;
     const profilePictureUrl = `${baseUrl}/api/image/profile-pictures/${req.file.filename}`;
 
 
