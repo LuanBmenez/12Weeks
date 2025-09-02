@@ -31,7 +31,8 @@ const API_CONFIG = {
       GET_ROOM: '/rooms',
       ADD_GOALS: '/rooms',
       COMPLETE_GOAL: '/rooms',
-      INVITE_USER: '/rooms'
+      INVITE_USER: '/rooms',
+      UNREAD_MESSAGES: '/rooms/unread-messages'
     }
   }
 };
@@ -164,6 +165,9 @@ export const roomsAPI = {
   
   updateRoomGoalProgress: (roomId, goalId, completed) => 
     api.put(`${API_CONFIG.ENDPOINTS.ROOMS.GET_ROOM}/${roomId}/room-goals/${goalId}`, { completed }),
+  
+  getUnreadMessages: () => 
+    api.get(API_CONFIG.ENDPOINTS.ROOMS.UNREAD_MESSAGES),
 };
 
 export default api;

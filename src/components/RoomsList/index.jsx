@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRooms } from "../../hooks/useRooms";
+import { useUnreadMessages } from "../../hooks/useUnreadMessages";
 import { useToast } from "../Toast";
 import {
   Container,
@@ -30,22 +31,44 @@ import {
 
 const RoomsList = () => {
   const navigate = useNavigate();
-  const { rooms, loading, error, fetchRooms, createRoom, deleteRoom } =
+  const { rooms, loading, error, fetchRooms, createRoom, deleteRoom, editRoom } =
     useRooms();
+  const { getUnreadCount } = useUnreadMessages();
   const { showSuccess, showError, showWarning } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [roomToEdit, setRoomToEdit] = useState(null);
   const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+  });
+  const [editFormData, setEditFormData] = useState({
     name: "",
     description: "",
   });
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest('.quick-actions-menu')) {
+        handleMenuClose();
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   const handleCreateRoom = () => {
     setShowCreateModal(true);
@@ -100,11 +123,78 @@ const RoomsList = () => {
     navigate(`/room/${roomId}`);
   };
 
-  const handleDeleteClick = (room, e) => {
+  const handleEditRoom = (room, e) => {
+    e.stopPropagation();
+    setRoomToEdit(room);
+    setEditFormData({
+      name: room.name,
+      description: room.description || "",
+    });
+    setShowEditModal(true);
+    handleMenuClose();
+  };
+
+  const handleDeleteRoom = (room, e) => {
     e.stopPropagation();
     setRoomToDelete(room);
     setShowDeleteModal(true);
+    handleMenuClose();
   };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setRoomToEdit(null);
+    setEditFormData({ name: "", description: "" });
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!editFormData.name.trim()) {
+      showWarning("Por favor, preencha o nome da sala.");
+      return;
+    }
+
+    try {
+      setEditing(true);
+      
+      const result = await editRoom(roomToEdit._id, {
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim()
+      });
+      
+      if (result.success) {
+        showSuccess("Sala editada com sucesso! ✏️");
+        handleCloseEditModal();
+      } else {
+        showError(result.message || "Erro ao editar sala");
+      }
+    } catch (err) {
+      showError("Erro ao editar sala");
+      console.error("Erro ao editar sala:", err);
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleMenuToggle = (roomId, e) => {
+    e.stopPropagation();
+    setOpenMenuId(openMenuId === roomId ? null : roomId);
+  };
+
+  const handleMenuClose = () => {
+    setOpenMenuId(null);
+  };
+
+
 
   const handleCloseDeleteModal = () => {
     setShowDeleteModal(false);
@@ -347,13 +437,35 @@ const RoomsList = () => {
                   onClick={() => handleRoomClick(room)}
                 >
                   <div className="room-header">
-                    <motion.h3
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 + 0.2 }}
-                    >
-                      {room.name}
-                    </motion.h3>
+                    <div className="room-title-section">
+                      <motion.h3
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 + 0.2 }}
+                      >
+                        {room.name}
+                      </motion.h3>
+                      
+                      <div className="status-badges">
+                        <motion.span
+                          className="status-badge new"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: index * 0.1 + 0.3, type: "spring" }}
+                        >
+                          Nova
+                        </motion.span>
+                        <motion.span
+                          className="status-badge active"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: index * 0.1 + 0.4, type: "spring" }}
+                        >
+                          Ativa
+                        </motion.span>
+                      </div>
+                    </div>
+                    
                     <div className="room-actions">
                       <motion.span
                         className="participant-count"
@@ -364,20 +476,49 @@ const RoomsList = () => {
                       >
                         👥 {room.participants?.length || 0}
                       </motion.span>
+                      
                       <motion.button
-                        className="delete-button"
-                        onClick={(e) => handleDeleteClick(room, e)}
-                        title="Deletar sala"
-                        whileHover={{
-                          scale: 1.2,
-                          rotate: 10,
-                          backgroundColor: "#fee2e2",
-                        }}
+                        className="favorite-button"
+                        whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 400 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: index * 0.1 + 0.4, type: "spring" }}
                       >
-                        🗑️
+                        ❤️
                       </motion.button>
+                      
+                      <motion.div
+                        className="quick-actions-menu"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: index * 0.1 + 0.5, type: "spring" }}
+                      >
+                        <motion.button
+                          className="menu-trigger"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => handleMenuToggle(room._id, e)}
+                        >
+                          ⋯
+                        </motion.button>
+                        {openMenuId === room._id && (
+                          <div className="menu-dropdown open">
+                            <button 
+                              className="menu-item"
+                              onClick={(e) => handleEditRoom(room, e)}
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button 
+                              className="menu-item delete"
+                              onClick={(e) => handleDeleteRoom(room, e)}
+                            >
+                              🗑️ Excluir
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
                     </div>
                   </div>
                   <motion.p
@@ -388,30 +529,117 @@ const RoomsList = () => {
                   >
                     {room.description}
                   </motion.p>
+                  
+                  <motion.div
+                    className="progress-section"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 + 0.4 }}
+                  >
+                    <div className="progress-header">
+                      <span className="progress-label">Progresso da Sala</span>
+                      <span className="progress-percentage">{Math.min(Math.floor((Date.now() - new Date(room.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 7 * 12) * 100), 100)}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <motion.div
+                        className="progress-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(Math.floor((Date.now() - new Date(room.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 7 * 12) * 100), 100)}%` }}
+                        transition={{ delay: index * 0.1 + 0.6, duration: 1, ease: "easeOut" }}
+                      />
+                    </div>
+                  </motion.div>
+                  <motion.div
+                    className="room-additional-info"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 + 0.4 }}
+                  >
+                    <div className="info-row">
+                      <div className="status-indicator">
+                        <motion.div
+                          className="status-dot online"
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.7, 1, 0.7]
+                          }}
+                          transition={{ 
+                            duration: 2, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        <span className="status-text">Online</span>
+                      </div>
+                      
+                      <span className="last-activity">
+                        🕒 Última atividade há {Math.floor((Date.now() - new Date(room.updatedAt || room.createdAt).getTime()) / (1000 * 60 * 60))} horas
+                      </span>
+                      
+                      <span className="active-participants">
+                        🟢 {Math.floor((room.participants?.length || 1) * 0.7)} de {room.participants?.length || 1} online
+                      </span>
+                    </div>
+                    
+                    <div className="upcoming-goals">
+                      <span className="goals-label">🎯 Próximas metas:</span>
+                      <div className="goals-preview">
+                        <span>• Finalizar projeto X</span>
+                        <span>• Revisar documentação</span>
+                        <span>• +2 outras</span>
+                      </div>
+                    </div>
+                  </motion.div>
+
                   <motion.div
                     className="room-footer"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 + 0.5 }}
                   >
-                    <span className="creation-date">
-                      📅 {new Date(room.createdAt).toLocaleDateString("pt-BR")}
-                    </span>
-                    <motion.button
-                      className="enter-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEnterRoom(room._id);
-                      }}
-                      whileHover={{
-                        scale: 1.05,
-                        boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      Entrar 🚀
-                    </motion.button>
+                    <div className="footer-left">
+                      <span className="creation-date">
+                        📅 {new Date(room.createdAt).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    
+                    <div className="footer-right">
+                      {getUnreadCount(room._id) > 0 && (
+                        <motion.div
+                          className="notification-badge"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: index * 0.1 + 0.6, type: "spring" }}
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          {getUnreadCount(room._id)}
+                        </motion.div>
+                      )}
+                      
+                      <motion.button
+                        className="enter-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEnterRoom(room._id);
+                        }}
+                        whileHover={{
+                          scale: 1.05,
+                          boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
+                          backgroundColor: "#059669",
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <motion.span
+                          className="button-icon"
+                          whileHover={{ x: 2 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          →
+                        </motion.span>
+                        Entrar
+                      </motion.button>
+                    </div>
                   </motion.div>
 
                
@@ -520,6 +748,106 @@ const RoomsList = () => {
                         >
                           <SubmitButton type="submit" disabled={creating}>
                             {creating ? "⏳ Criando..." : "🚀 Criar Sala"}
+                          </SubmitButton>
+                        </motion.div>
+                      </ButtonGroup>
+                    </motion.div>
+                  </Form>
+                </ModalBody>
+              </ModalContent>
+            </Modal>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showEditModal && roomToEdit && (
+            <Modal
+              as={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ModalContent
+                as={motion.div}
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+              >
+                <ModalHeader>
+                  <ModalTitle>✏️ Editar Sala</ModalTitle>
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <CloseButton onClick={handleCloseEditModal}>×</CloseButton>
+                  </motion.div>
+                </ModalHeader>
+                <ModalBody>
+                  <Form onSubmit={handleEditSubmit}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <FormGroup>
+                        <Label htmlFor="edit-name">🏠 Nome da Sala *</Label>
+                        <Input
+                          id="edit-name"
+                          name="name"
+                          type="text"
+                          placeholder="Ex: Metas da Semana"
+                          value={editFormData.name}
+                          onChange={handleEditInputChange}
+                          maxLength={100}
+                          required
+                        />
+                      </FormGroup>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <FormGroup>
+                        <Label htmlFor="edit-description">📝 Descrição</Label>
+                        <TextArea
+                          id="edit-description"
+                          name="description"
+                          placeholder="Descreva o objetivo desta sala..."
+                          value={editFormData.description}
+                          onChange={handleEditInputChange}
+                          maxLength={500}
+                          rows={4}
+                        />
+                      </FormGroup>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <ButtonGroup>
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <CancelButton
+                            type="button"
+                            onClick={handleCloseEditModal}
+                          >
+                            Cancelar
+                          </CancelButton>
+                        </motion.div>
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <SubmitButton type="submit" disabled={editing}>
+                            {editing ? "⏳ Salvando..." : "💾 Salvar Alterações"}
                           </SubmitButton>
                         </motion.div>
                       </ButtonGroup>

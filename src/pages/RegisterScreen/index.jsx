@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext.jsx";
+import logoImage from "../../assets/12weeks.png";
 import {
   Divider,
   BackButton,
@@ -220,9 +221,16 @@ export default function RegisterScreen() {
         </BackButton>
         <Header>
           <IconBox>
-            <UserPlus className="w-8 h-8" style={{ color: "#fff" }} />
+            <img 
+              src={logoImage} 
+              alt="12Weeks Logo" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain' 
+              }} 
+            />
           </IconBox>
-          <Title>Criar conta</Title>
           <Subtitle>Preencha os dados para se cadastrar</Subtitle>
         </Header>
         <FormCard>

@@ -97,11 +97,24 @@ router.get('/:roomId', auth, async (req, res) => {
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const userTodayProgress = user.dailyProgress.find(progress => 
+    let userTodayProgress = user.dailyProgress.find(progress => 
       progress.roomId.toString() === room._id.toString() &&
       progress.date.toDateString() === today.toDateString()
     );
 
+    if (!userTodayProgress && userGoals.length > 0) {
+      userTodayProgress = {
+        roomId: room._id,
+        date: today,
+        completedGoals: userGoals.map(goal => ({
+          goalId: goal._id,
+          completed: false
+        })),
+        dailyPercentage: 0
+      };
+      user.dailyProgress.push(userTodayProgress);
+      await user.save();
+    }
     
     const dailyPercentage = user.calculateDailyCompletion(room._id, today, room);
     const weeklyPercentage = user.calculateWeeklyProgress(room._id);

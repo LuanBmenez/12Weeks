@@ -7,6 +7,7 @@ import DashboardHeader from "../../components/DashboardHeader";
 import StatsCards from "../../components/StatsCards";
 import QuickActions from "../../components/QuickActions";
 import CreateRoomModal from "../../components/CreateRoomModal";
+import AchievementsRoom from "../../components/AchievementsRoom";
 import {
   Container,
   Main,
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const { createRoom } = useRooms();
   const userStats = useUserStats();
   const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
 
   const handleCreateRoom = async (roomData) => {
     const result = await createRoom(roomData);
@@ -73,7 +75,10 @@ export default function Dashboard() {
             <StatsCards userStats={userStats} />
           </StatsSection>
           
-          <QuickActions onCreateRoom={() => setIsCreateRoomModalOpen(true)} />
+          <QuickActions 
+            onCreateRoom={() => setIsCreateRoomModalOpen(true)}
+            onOpenAchievements={() => setIsAchievementsOpen(true)}
+          />
         </Main>
       </motion.div>
 
@@ -82,6 +87,10 @@ export default function Dashboard() {
         onClose={() => setIsCreateRoomModalOpen(false)}
         onCreateRoom={handleCreateRoom}
       />
+
+      {isAchievementsOpen && (
+        <AchievementsRoom onClose={() => setIsAchievementsOpen(false)} />
+      )}
     </Container>
   );
 }

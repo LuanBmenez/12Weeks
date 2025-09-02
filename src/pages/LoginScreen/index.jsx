@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext.jsx";
+import logoImage from "../../assets/12weeks.png";
 import {
   Container,
   Card,
@@ -115,7 +116,15 @@ export default function LoginScreen() {
       <Card>
         <Header>
           <IconBox>
-            <Lock size={32} style={{ color: "#fff" }} />
+            <img 
+              src={logoImage} 
+              alt="12Weeks Logo" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain' 
+              }} 
+            />
           </IconBox>
           <Title>Bem-vindo ao 12WEEKS</Title>
           <Subtitle>Entre na sua conta para continuar</Subtitle>

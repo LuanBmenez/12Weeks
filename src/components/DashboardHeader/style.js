@@ -25,13 +25,20 @@ export const LogoBox = styled.div`
 `;
 
 export const LogoIcon = styled.div`
-  width: 2rem;
-  height: 2rem;
-  background: #2563eb;
+  width: 12rem;
+  height: 12rem;
+  background: transparent;
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 `;
 
 export const Title = styled.h1`

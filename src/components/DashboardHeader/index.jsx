@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import UserActions from "../UserActions";
+import logoImage from "../../assets/12weeks_sem_fundo.png";
 import {
   Header,
   HeaderInner,
@@ -14,9 +15,16 @@ export default function DashboardHeader({ onLogout }) {
       <HeaderInner>
         <LogoBox>
           <LogoIcon>
-            <Users size={20} style={{ color: "#fff" }} />
+            <img 
+              src={logoImage} 
+              alt="12Weeks Logo" 
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'contain' 
+              }} 
+            />
           </LogoIcon>
-          <Title>12Weeks</Title>
         </LogoBox>
         
         <UserActions onLogout={onLogout} />

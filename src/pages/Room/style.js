@@ -2,31 +2,30 @@ import styled from 'styled-components';
 
 
 const colors = {
-  // Cores primárias mais vibrantes
-  primary: '#6366f1',     // Indigo vibrante
+
+  primary: '#6366f1',     
   primaryDark: '#4f46e5', 
   primaryLight: '#818cf8', 
   
-  // Cores secundárias mais saturadas
-  secondary: '#10b981',   // Emerald vibrante
+
+  secondary: '#10b981',   
   secondaryDark: '#059669',
   secondaryLight: '#34d399', 
   
-  // Cores semânticas vibrantes
-  success: '#22c55e',     // Verde vibrante
-  warning: '#f59e0b',     // Amarelo vibrante
-  error: '#ef4444',       // Vermelho vibrante
-  info: '#3b82f6',        // Azul vibrante
+
+  success: '#22c55e',    
+  warning: '#f59e0b',    
+  error: '#ef4444',       
+  info: '#3b82f6',       
   
-  // Cores de acento
+
   accent: {
-    purple: '#8b5cf6',    // Roxo vibrante
-    pink: '#ec4899',      // Rosa vibrante
-    orange: '#f97316',    // Laranja vibrante
-    cyan: '#06b6d4',      // Ciano vibrante
+    purple: '#8b5cf6',    
+    pink: '#ec4899',     
+    orange: '#f97316',    
+    cyan: '#06b6d4',     
   },
-  
-  // Escala de cinza moderna
+
   gray: {
     50: '#f8fafc',
     100: '#f1f5f9', 
@@ -40,7 +39,7 @@ const colors = {
     900: '#0f172a'
   },
   
-  // Tema claro
+
   light: {
     background: '#fafbfc',
     surface: '#ffffff',
@@ -49,7 +48,7 @@ const colors = {
     textSecondary: '#475569'
   },
   
-  // Tema escuro
+
   dark: {
     background: '#0f172a',
     surface: '#1e293b',
@@ -66,16 +65,16 @@ const typography = {
     mono: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace'
   },
   fontSize: {
-    xs: '0.75rem',    // 12px
-    sm: '0.875rem',   // 14px
-    base: '1rem',     // 16px
-    lg: '1.125rem',   // 18px
-    xl: '1.25rem',    // 20px
-    '2xl': '1.5rem',  // 24px
-    '3xl': '1.875rem', // 30px
-    '4xl': '2.25rem', // 36px
-    '5xl': '3rem',    // 48px
-    '6xl': '3.75rem'  // 60px
+    xs: '0.75rem',    
+    sm: '0.875rem',   
+    base: '1rem',     
+    lg: '1.125rem',   
+    xl: '1.25rem',    
+    '2xl': '1.5rem',  
+    '3xl': '1.875rem', 
+    '4xl': '2.25rem', 
+    '5xl': '3rem',   
+    '6xl': '3.75rem'  
   },
   fontWeight: {
     light: '300',
@@ -110,14 +109,14 @@ export const Container = styled.div`
   color: ${colors.gray[800]};
   line-height: ${typography.lineHeight.normal};
   
-  /* Forçar atualização visual */
+  
   border: 1px solid transparent;
 `;
 
 export const Main = styled.main`
   max-width: 80rem;
   margin: 0 auto;
-  padding: 2rem 1rem 2rem 10rem; /* Mais padding à esquerda para o botão voltar */
+  padding: 2rem 1rem 2rem 10rem;
   position: relative;
 `;
 
@@ -140,8 +139,7 @@ export const BackButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  
-  /* Efeito de brilho sutil */
+
   &::before {
     content: '';
     position: absolute;
@@ -186,7 +184,6 @@ export const RoomInfo = styled.div`
   width: 100%;
   margin: 0;
   
-  /* Seção do Título Principal */
   .room-title-section {
     margin-bottom: 1.5rem;
     
@@ -353,7 +350,6 @@ export const RoomInfo = styled.div`
     }
   }
   
-  /* Seção da Descrição */
   .room-description-section {
     margin-bottom: 2rem;
     
@@ -465,7 +461,6 @@ export const RoomInfo = styled.div`
     }
   }
   
-  /* Estatísticas da Sala */
   .room-stats-header {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -485,7 +480,6 @@ export const RoomInfo = styled.div`
       position: relative;
       overflow: hidden;
       
-      /* Efeito de brilho sutil */
       &::before {
         content: '';
         position: absolute;
@@ -552,7 +546,6 @@ export const RoomInfo = styled.div`
     }
   }
 
-  /* Estilos para edição (corrigidos) */
   .edit-input-container {
     display: flex;
     align-items: center;
@@ -671,7 +664,6 @@ export const Header = styled.div`
   padding: 1rem 0;
   position: relative;
   
-  /* Botão voltar posicionado à esquerda, fora da área principal */
   ${BackButton} {
     position: absolute;
     left: -8rem;
@@ -680,7 +672,6 @@ export const Header = styled.div`
     z-index: 10;
   }
   
-  /* Container das informações da sala ocupa toda a largura */
   ${RoomInfo} {
     width: 100%;
     margin-left: 0;
@@ -694,7 +685,6 @@ export const Content = styled.div`
   width: 100%;
   margin: 0;
   
-  /* Separador visual entre seções */
   .goals-section-divider {
     height: 2px;
     background: linear-gradient(90deg, 
@@ -732,6 +722,33 @@ export const FloatingChatButton = styled.button`
     background: ${colors.primaryDark};
     transform: scale(1.1);
   }
+
+  .notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    animation: pulse 2s infinite;
+    border: 2px solid white;
+    
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+      }
+    }
+  }
 `;
 
 export const GoalsSection = styled.div`
@@ -765,7 +782,6 @@ export const GoalsSection = styled.div`
     border-bottom: 2px solid #f1f5f9;
     position: relative;
     
-    /* Barra de progresso visual no header */
     &::after {
       content: '';
       position: absolute;
@@ -972,7 +988,6 @@ export const GoalsSection = styled.div`
         position: relative;
         overflow: hidden;
         
-        /* Efeito de brilho sutil */
         &::before {
           content: '';
           position: absolute;
@@ -1071,7 +1086,6 @@ export const GoalsSection = styled.div`
           animation: goalCompleted 0.8s ease-out;
           position: relative;
           
-          /* Confetti effect para metas completadas */
           &::after {
             content: '🎉';
             position: absolute;
@@ -1158,7 +1172,6 @@ export const GoalsSection = styled.div`
             position: relative;
             overflow: hidden;
             
-            /* Efeito de brilho para metas completadas */
             &::before {
               content: '';
               position: absolute;
@@ -1247,7 +1260,6 @@ export const GoalsSection = styled.div`
     }
   }
   
-  /* Animações para feedback visual */
   @keyframes goalCompleted {
     0% {
       transform: scale(1);
@@ -1528,13 +1540,10 @@ export const ProgressCard = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* Importar fontes Google Fonts */
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
   
-  /* Animação de entrada */
   animation: cardEntrance 0.6s ease-out;
   
-  /* Barra superior colorida */
   &::before {
     content: '';
     position: absolute;
@@ -1553,7 +1562,6 @@ export const ProgressCard = styled.div`
     transition: opacity 0.3s ease;
   }
   
-  /* Hover effects */
   &:hover {
     transform: translateY(-8px) scale(1.02);
     box-shadow: 
@@ -1568,7 +1576,6 @@ export const ProgressCard = styled.div`
     }
   }
   
-  /* Estados baseados no progresso */
   &.progress-excellent {
     background: linear-gradient(135deg, 
       #f0fdf4 0%, 
@@ -1637,7 +1644,6 @@ export const ProgressCard = styled.div`
     }
   }
   
-  /* Tema escuro */
   &.dark-theme {
     background: linear-gradient(135deg, 
       ${colors.dark.surface} 0%, 
@@ -1654,7 +1660,6 @@ export const ProgressCard = styled.div`
     }
   }
   
-  /* Animações */
   @keyframes cardEntrance {
     0% {
       opacity: 0;
@@ -1710,7 +1715,6 @@ export const ProgressCard = styled.div`
     position: relative;
     overflow: hidden;
     
-    /* Efeito de brilho sutil no hover */
     &::before {
       content: '';
       position: absolute;
@@ -1802,7 +1806,6 @@ export const ProgressCard = styled.div`
         }
       }
       
-      /* Efeito de brilho animado */
       &::before {
         content: '';
         position: absolute;
@@ -1835,7 +1838,6 @@ export const ProgressCard = styled.div`
       }
     }
     
-    /* Estilos para ícones modernos */
     .modern-icon {
       .icon-emoji {
         position: relative;
@@ -1885,7 +1887,6 @@ export const ProgressCard = styled.div`
         }
       }
       
-      /* Animação especial para progresso 100% */
       &.perfect-progress {
         animation: perfect-glow 2s ease-in-out infinite;
         
@@ -1995,7 +1996,6 @@ export const ProgressCard = styled.div`
         0 1px 3px rgba(0, 0, 0, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
       
-      /* Partículas flutuantes no fundo */
       &::before {
         content: '';
         position: absolute;
@@ -2036,7 +2036,6 @@ export const ProgressCard = styled.div`
             inset 0 1px 0 rgba(255, 255, 255, 0.3),
             inset 0 -1px 0 rgba(0, 0, 0, 0.2);
           
-          /* Efeito shimmer animado */
           &::after {
             content: '';
             position: absolute;
@@ -2052,7 +2051,6 @@ export const ProgressCard = styled.div`
             animation: shimmer-progress 3s ease-in-out infinite;
           }
           
-          /* Partículas flutuantes no progresso */
           &::before {
             content: '';
             position: absolute;
@@ -2086,7 +2084,6 @@ export const ProgressCard = styled.div`
             inset 0 1px 0 rgba(255, 255, 255, 0.3),
             inset 0 -1px 0 rgba(0, 0, 0, 0.2);
           
-          /* Efeito shimmer animado */
           &::after {
             content: '';
             position: absolute;
@@ -2102,7 +2099,6 @@ export const ProgressCard = styled.div`
             animation: shimmer-progress 3s ease-in-out infinite;
           }
           
-          /* Partículas flutuantes no progresso */
           &::before {
             content: '';
             position: absolute;
@@ -2123,7 +2119,6 @@ export const ProgressCard = styled.div`
     }
   }
   
-  /* Animações para as barras de progresso */
   @keyframes shimmer-progress {
     0% {
       left: -100%;
@@ -2535,7 +2530,6 @@ export const ParticipantsSection = styled.div`
       position: relative;
       overflow: hidden;
       
-      /* Gradientes baseados no progresso */
       &.progress-excellent {
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
         border: 2px solid #22c55e;
@@ -2560,14 +2554,12 @@ export const ParticipantsSection = styled.div`
         box-shadow: 0 8px 25px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
       }
       
-      /* Efeito de elevação mais pronunciado */
       &:hover {
         transform: translateY(-4px) scale(1.02);
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
         border-color: #d1d5db;
       }
       
-      /* Animação de confetes para metas completadas */
       &.celebration::before {
         content: '';
         position: absolute;
@@ -2602,7 +2594,6 @@ export const ParticipantsSection = styled.div`
         }
       }
       
-      /* Estrelas animadas para progresso excelente */
       &.stars::after {
         content: '⭐✨🌟';
         position: absolute;
@@ -2624,7 +2615,6 @@ export const ParticipantsSection = styled.div`
         }
       }
       
-      /* Animação de atualização de progresso */
       &.updating {
         animation: progressUpdate 0.6s ease-out;
       }
@@ -2859,7 +2849,6 @@ export const ParticipantsSection = styled.div`
                 0 2px 8px rgba(16, 185, 129, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
               
-              /* Efeito de brilho animado mais suave */
               &::after {
                 content: '';
                 position: absolute;
@@ -2875,7 +2864,6 @@ export const ParticipantsSection = styled.div`
                 animation: shimmer 3s ease-in-out infinite;
               }
               
-              /* Efeito de partículas flutuantes */
               &::before {
                 content: '';
                 position: absolute;

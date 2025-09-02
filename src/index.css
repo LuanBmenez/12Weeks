@@ -1,6 +1,16 @@
 
-body {
+* {
+  box-sizing: border-box;
+}
+
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
   font-family: 'Inter', Arial, sans-serif;
   background: #f3f4f6;
 }

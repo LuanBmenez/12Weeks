@@ -50,21 +50,9 @@ const StatsCards = ({ userStats = {} }) => {
       showProgress: true,
       progressValue: completionRate
     },
+   
     {
       id: 2,
-      icon: TrendingUp,
-      label: 'Progresso Geral',
-      value: Math.round(overallProgress),
-      suffix: '%',
-      color: '#8b5cf6',
-      bgColor: '#f3e8ff',
-      trend: overallProgress > 75 ? '+5% esta semana' : 'Manter foco',
-      trendUp: overallProgress > 50,
-      showProgress: true,
-      progressValue: overallProgress
-    },
-    {
-      id: 3,
       icon: Calendar,
       label: 'Progresso 12 Semanas',
       value: currentWeek,
@@ -77,7 +65,7 @@ const StatsCards = ({ userStats = {} }) => {
       progressValue: weekProgress
     },
     {
-      id: 4,
+      id: 3,
       icon: Award,
       label: 'Sequência Semanal',
       value: weeklyStreak,

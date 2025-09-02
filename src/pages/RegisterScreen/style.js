@@ -53,18 +53,18 @@ export const BackButton = styled.button`
 `;
 export const Header = styled.div`
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 `;
 export const IconBox = styled.div`
-  width: 4rem;
-  height: 4rem;
-  background: #2563eb;
+  width: 8rem;
+  height: 8rem;
+  background: transparent;
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem auto;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  margin: 0 auto 1.5rem auto;
+  box-shadow: none;
 `;
 export const Title = styled.h1`
   font-size: 2rem;

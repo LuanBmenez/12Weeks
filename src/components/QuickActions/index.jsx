@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, UserPlus, Users } from "lucide-react";
+import { Plus, UserPlus, Users, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ActionCard from "../ActionCard";
 import FriendInviteModal from "../FriendInviteModal";
@@ -7,7 +7,7 @@ import {
   QuickActionsGrid,
 } from "./style";
 
-export default function QuickActions({ onCreateRoom }) {
+export default function QuickActions({ onCreateRoom, onOpenAchievements }) {
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -43,6 +43,17 @@ export default function QuickActions({ onCreateRoom }) {
       actionText: "Enviar Convite",
       onClick: () => {
         setIsFriendModalOpen(true);
+      }
+    },
+    {
+      id: 4,
+      icon: Award,
+      iconColor: "#f59e0b",
+      title: "Sala de Conquistas",
+      description: "Veja suas conquistas e badges desbloqueados",
+      actionText: "Ver Conquistas",
+      onClick: () => {
+        onOpenAchievements();
       }
     }
   ];

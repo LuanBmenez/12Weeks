@@ -26,6 +26,16 @@ export const ChatContainer = styled.div`
   flex-direction: column;
   z-index: 1001;
   animation: ${slideUp} 0.3s ease-out;
+  
+  left: auto !important;
+  transform: none !important;
+  
+  @media (max-width: 480px) {
+    width: calc(100vw - 2rem);
+    right: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+  }
 `;
 
 export const ChatHeader = styled.div`

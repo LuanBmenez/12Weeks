@@ -8,7 +8,7 @@ import StatsCards from '../../components/StatsCards';
 import ProgressChart from '../../components/ProgressChart';
 import EditableField from '../../components/EditableField';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Mail, Edit3, Camera, TrendingUp, Target, Award } from 'lucide-react';
 import { 
   Container, 
   Header, 
@@ -17,7 +17,9 @@ import {
   Avatar, 
   UserInfo,
   ChartSection,
-  BackButton
+  BackButton,
+  StatsGrid,
+  StatsCard
 } from './style';
 import ImageWithFallback from '../../components/ImageWithFallback';
 
@@ -29,6 +31,9 @@ const Profile = () => {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+
 
   if (!user) {
     return (
@@ -137,19 +142,16 @@ const Profile = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    
     if (!file.type.startsWith('image/')) {
-      showError('Por favor, selecione apenas arquivos de imagem.');
+      showError('Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF).');
       return;
     }
 
-   
     if (file.size > 5 * 1024 * 1024) {
       showError('A imagem deve ter no máximo 5MB.');
       return;
     }
 
-    
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreviewImage(e.target.result);
@@ -159,6 +161,7 @@ const Profile = () => {
     
     try {
       setUploading(true);
+      setUploadProgress(0);
       console.log('Starting upload for file:', file.name, 'Size:', file.size);
       
       
@@ -170,6 +173,17 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('profilePicture', file);
 
+      
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+
       console.log('Sending request to server...');
       const response = await fetch(`${config.API_BASE_URL}/auth/upload-profile-picture`, {
         method: 'POST',
@@ -178,6 +192,9 @@ const Profile = () => {
         },
         body: formData
       });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
@@ -200,11 +217,13 @@ const Profile = () => {
       
       setTimeout(() => {
         setPreviewImage(null);
-      }, 500);
+        setUploadProgress(0);
+      }, 1000);
     } catch (error) {
       console.error('Erro no upload:', error);
       showError('Erro ao atualizar foto do perfil. Tente novamente.');
       setPreviewImage(null);
+      setUploadProgress(0);
     } finally {
       setUploading(false);
     }
@@ -335,12 +354,12 @@ const Profile = () => {
                       src={previewImage} 
                       alt="Preview da Foto"
                       style={{
-                        width: '80px',
-                        height: '80px',
+                        width: '100px',
+                        height: '100px',
                         borderRadius: '50%',
                         objectFit: 'cover',
-                        margin: '0 auto 1rem auto',
-                        border: '3px solid #e2e8f0'
+                        border: '4px solid rgba(255, 255, 255, 0.8)',
+                        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
                       }}
                     />
                   ) : (
@@ -351,6 +370,21 @@ const Profile = () => {
                       onLoad={() => console.log('Image loaded successfully')}
                       onError={() => console.log('Image failed to load, showing placeholder')}
                     />
+                  )}
+                  
+                  {!uploading && (
+                    <div className="upload-overlay" onClick={handlePhotoClick}>
+                      <Camera className="upload-icon" />
+                    </div>
+                  )}
+                  
+                  {uploading && (
+                    <div className="upload-progress">
+                      <div 
+                        className="progress-bar" 
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
                   )}
                 </div>
                 
@@ -368,7 +402,17 @@ const Profile = () => {
                   disabled={uploading}
                   className="change-photo-btn"
                 >
-                  {uploading ? 'Enviando...' : 'Mudar Foto'}
+                  {uploading ? (
+                    <>
+                      <Camera size={16} style={{ marginRight: '8px' }} />
+                      Enviando... {Math.round(uploadProgress)}%
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={16} style={{ marginRight: '8px' }} />
+                      Mudar Foto
+                    </>
+                  )}
                 </button>
               </Avatar>
               <UserInfo>
@@ -399,19 +443,78 @@ const Profile = () => {
           </motion.div>
         </ProfileSection>
 
-        <motion.div variants={sectionVariants}>
-          <StatsCards userStats={userStats} />
-        </motion.div>
+        <StatsGrid>
+          <motion.div variants={sectionVariants}>
+            <StatsCard gradient="linear-gradient(90deg, #10b981 0%, #059669 100%)">
+              <h3>
+                <TrendingUp />
+                Tempo Total de Foco
+              </h3>
+              <div className="stat-value">
+                {userStats?.totalFocusTime ? 
+                  `${Math.floor(userStats.totalFocusTime / 60)}h ${String(userStats.totalFocusTime % 60).padStart(2, '0')}m` : 
+                  '0h 00m'
+                }
+              </div>
+              <p className="stat-label">Tempo dedicado aos estudos</p>
+            </StatsCard>
+          </motion.div>
+
+          <motion.div variants={sectionVariants}>
+            <StatsCard gradient="linear-gradient(90deg, #f59e0b 0%, #d97706 100%)">
+              <h3>
+                <Target />
+                Streak Atual
+              </h3>
+              <div className="stat-value">
+                {userStats?.currentStreak || 0}
+              </div>
+              <p className="stat-label">Dias consecutivos de atividade</p>
+            </StatsCard>
+          </motion.div>
+
+          <motion.div variants={sectionVariants}>
+            <StatsCard 
+              gradient="linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)"
+            >
+              <h3>
+                <Award />
+                Conquistas
+              </h3>
+              <div className="stat-value">
+                {userStats?.achievements?.filter(a => a.unlocked).length || 0}
+              </div>
+              <p className="stat-label">Badges conquistados</p>
+            </StatsCard>
+          </motion.div>
+
+          <motion.div variants={sectionVariants}>
+            <StatsCard gradient="linear-gradient(90deg, #ef4444 0%, #dc2626 100%)">
+              <h3>
+                <Calendar />
+                Meta Semanal
+              </h3>
+              <div className="stat-value">
+                {userStats?.weeklyGoalProgress || 0}%
+              </div>
+              <p className="stat-label">Progresso da meta semanal</p>
+            </StatsCard>
+          </motion.div>
+        </StatsGrid>
 
         <ChartSection>
           <motion.div variants={sectionVariants}>
-            <ProgressChart 
-              weeklyData={weeklyData.length > 0 ? weeklyData : fallbackWeeklyData} 
-              title="Atividade Semanal"
-            />
+            <div className="chart-card">
+              <ProgressChart 
+                weeklyData={weeklyData.length > 0 ? weeklyData : fallbackWeeklyData} 
+                title="Atividade Semanal"
+              />
+            </div>
           </motion.div>
         </ChartSection>
       </motion.div>
+      
+
     </Container>
   );
 };

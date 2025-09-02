@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import { MessageSquare } from 'lucide-react';
 import { useRooms } from '../../hooks/useRooms';
 import { useFriends } from '../../hooks/useFriends';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { roomsAPI } from '../../config/api';
@@ -46,6 +47,7 @@ const Room = () => {
   const navigate = useNavigate();
   const { getRoom, addDailyGoals, completeGoal, inviteUser, addRoomGoals, completeRoomGoal } = useRooms();
   const { friends, fetchFriends } = useFriends();
+  const { getUnreadCount } = useUnreadMessages();
   const { showSuccess, showError, showWarning } = useToast();
   const { user } = useAuth();
 
@@ -59,7 +61,21 @@ const Room = () => {
       setTodayProgress(todayProgressData);
       setDailyPercentage(todayProgressData.dailyPercentage || 0);
     } else {
-      setTodayProgress(null);
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const emptyTodayProgress = {
+        roomId: roomData._id,
+        date: today,
+        completedGoals: activeGoals.map(goal => ({
+          goalId: goal._id,
+          completed: false
+        })),
+        dailyPercentage: 0
+      };
+      
+      setTodayProgress(emptyTodayProgress);
       setDailyPercentage(0);
     }
     
@@ -164,6 +180,60 @@ const Room = () => {
     };
   }, [roomId, loadRoom]);
 
+  useEffect(() => {
+    const checkDayChange = () => {
+      const now = new Date();
+      const currentDay = now.getDate();
+      
+      const lastLoadTime = localStorage.getItem(`lastRoomLoad_${roomId}`);
+      if (lastLoadTime) {
+        const lastLoadDate = new Date(lastLoadTime);
+        const lastLoadDay = lastLoadDate.getDate();
+        
+        if (currentDay !== lastLoadDay) {
+          console.log('Dia mudou, recarregando sala...');
+          loadRoom();
+        }
+      }
+      
+      localStorage.setItem(`lastRoomLoad_${roomId}`, now.toISOString());
+    };
+
+    checkDayChange();
+
+    const interval = setInterval(checkDayChange, 60000);
+
+    return () => clearInterval(interval);
+  }, [roomId, loadRoom]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      const lastLoadTime = localStorage.getItem(`lastRoomLoad_${roomId}`);
+      if (lastLoadTime) {
+        const lastLoadDate = new Date(lastLoadTime);
+        const now = new Date();
+        const timeDiff = now.getTime() - lastLoadDate.getTime();
+        
+        if (timeDiff > 5 * 60 * 1000) {
+          console.log('Página ganhou foco, sincronizando progresso...');
+          loadRoom();
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        handleFocus();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [roomId, loadRoom]);
+
   
   useEffect(() => {
     if (user && room) {
@@ -210,9 +280,9 @@ const Room = () => {
       setRoomGoalProgress(result.roomProgress.dailyPercentage || 0);
     }
 
-    // Atualizar progresso dos participantes
+    
     if (result.todayProgress && user) {
-      // Adicionar animação de atualização
+     
       setUpdatingParticipants(prev => new Set([...prev, user._id]));
       
       setRoom(prevRoom => {
@@ -239,7 +309,7 @@ const Room = () => {
         };
       });
       
-      // Remover animação após 600ms
+      
       setTimeout(() => {
         setUpdatingParticipants(prev => {
           const newSet = new Set(prev);
@@ -249,9 +319,8 @@ const Room = () => {
       }, 600);
     }
 
-    // Atualizar progresso dos participantes para metas da sala
     if (result.roomProgress && user) {
-      // Adicionar animação de atualização
+
       setUpdatingParticipants(prev => new Set([...prev, user._id]));
       
       setRoom(prevRoom => {
@@ -259,7 +328,6 @@ const Room = () => {
         
         const updatedParticipants = prevRoom.participants.map(participant => {
           if (participant.user._id === user._id) {
-            // Calcular novo progresso combinado (individual + sala)
             const individualProgress = participant.progress?.dailyPercentage || 0;
             const roomProgress = result.roomProgress.dailyPercentage || 0;
             const combinedProgress = Math.round((individualProgress + roomProgress) / 2);
@@ -282,7 +350,6 @@ const Room = () => {
         };
       });
       
-      // Remover animação após 600ms
       setTimeout(() => {
         setUpdatingParticipants(prev => {
           const newSet = new Set(prev);
@@ -328,7 +395,7 @@ const Room = () => {
         const message = completed ? 'Meta concluída! 🎉' : 'Meta desmarcada';
         showSuccess(message);
         
-        // Disparar animação de celebração se completou uma meta
+        
         if (completed && user) {
           triggerCelebration(user._id);
         }
@@ -374,7 +441,7 @@ const Room = () => {
         const message = completed ? 'Meta da sala concluída! 🏠' : 'Meta da sala desmarcada';
         showSuccess(message);
         
-        // Disparar animação de celebração se completou uma meta da sala
+        
         if (completed && user) {
           triggerCelebration(user._id);
         }
@@ -615,7 +682,7 @@ const Room = () => {
     
     let baseClass = 'participant-card-modern';
     
-    // Classes baseadas no progresso
+   
     if (progress >= 100) {
       baseClass += ' progress-excellent';
     } else if (progress >= 75) {
@@ -626,12 +693,11 @@ const Room = () => {
       baseClass += ' progress-poor';
     }
     
-    // Adicionar animações especiais
+
     if (isAllCompleted) {
       baseClass += ' stars';
     }
     
-    // Adicionar classe de atualização
     if (isUpdating) {
       baseClass += ' updating';
     }
@@ -640,7 +706,7 @@ const Room = () => {
   };
 
   const triggerCelebration = (participantId) => {
-    // Adicionar classe de celebração temporariamente
+
     const element = document.querySelector(`[data-participant-id="${participantId}"]`);
     if (element) {
       element.classList.add('celebration');
@@ -651,27 +717,22 @@ const Room = () => {
   };
 
   const getHotStreak = (participant) => {
-    // Usar dados reais do progresso para calcular hot streak
+
     const progress = getParticipantProgress(participant);
     const completedGoals = participant.progress?.goals?.filter(g => g.completed).length || 0;
     const totalGoals = participant.progress?.goals?.length || 0;
     
-    // Só mostra hot streak se tem progresso significativo
     if (progress > 0 && totalGoals > 0) {
-      // Calcular streak baseado no progresso atual e consistência
+
       const completionRate = completedGoals / totalGoals;
       
       if (progress >= 100 && completionRate === 1) {
-        // Progresso perfeito - streak alto
-        return Math.min(Math.floor(progress / 15), 7); // Máximo 7 dias
+        return Math.min(Math.floor(progress / 15), 7); 
       } else if (progress >= 75 && completionRate >= 0.8) {
-        // Progresso muito bom - streak médio
-        return Math.min(Math.floor(progress / 20), 5); // Máximo 5 dias
+        return Math.min(Math.floor(progress / 20), 5);
       } else if (progress >= 50 && completionRate >= 0.6) {
-        // Progresso bom - streak baixo
-        return Math.min(Math.floor(progress / 25), 3); // Máximo 3 dias
+        return Math.min(Math.floor(progress / 25), 3); 
       } else if (progress >= 25) {
-        // Progresso básico - streak mínimo
         return 1;
       }
     }
@@ -679,16 +740,16 @@ const Room = () => {
   };
 
   const getLastActivity = (participant) => {
-    // Usar dados reais de última atividade baseados no progresso
+
     const progress = getParticipantProgress(participant);
     const totalGoals = participant.progress?.goals?.length || 0;
     
-    // Se é o usuário atual, sempre mostra como ativo
+
     if (participant.user._id === user?._id) {
       return { text: 'Ativo agora', class: 'active' };
     }
     
-    // Se tem progresso hoje, considera ativo baseado na quantidade
+
     if (progress > 0) {
       if (progress >= 100) {
         return { text: 'Ativo agora', class: 'active' };
@@ -703,12 +764,12 @@ const Room = () => {
       }
     }
     
-    // Se não tem progresso hoje, verifica se tem metas definidas
+
     if (totalGoals > 0) {
       return { text: 'Ativo há 6h', class: 'inactive' };
     }
     
-    // Se não tem metas definidas
+
     return { text: 'Sem atividade', class: 'inactive' };
   };
 
@@ -788,7 +849,7 @@ const Room = () => {
             ← Voltar
           </BackButton>
           <RoomInfo>
-            {/* Título Principal com Hierarquia Visual */}
+
             <div className="room-title-section">
               {editingTitle ? (
                 <div className="edit-input-container">
@@ -849,7 +910,7 @@ const Room = () => {
                     </span>
                   </div>
                   
-                  {/* Meta-informações */}
+
                   <div className="room-meta-info">
                     <div className="meta-item">
                       <span className="meta-icon">📅</span>
@@ -868,7 +929,7 @@ const Room = () => {
               )}
             </div>
 
-            {/* Descrição Melhorada */}
+        
             <div className="room-description-section">
               {editingDescription ? (
                 <div className="edit-input-container">
@@ -936,7 +997,7 @@ const Room = () => {
               )}
             </div>
 
-            {/* Estatísticas da Sala */}
+
             <div className="room-stats-header">
               <div className="stat-card">
                 <div className="stat-icon">👥</div>
@@ -1540,6 +1601,11 @@ const Room = () => {
       {!isChatOpen && (
         <FloatingChatButton onClick={() => setIsChatOpen(true)}>
           <MessageSquare />
+          {getUnreadCount(roomId) > 0 && (
+            <div className="notification-badge">
+              {getUnreadCount(roomId)}
+            </div>
+          )}
         </FloatingChatButton>
       )}
 

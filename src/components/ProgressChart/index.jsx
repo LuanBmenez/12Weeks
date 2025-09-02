@@ -23,22 +23,23 @@ const ProgressChart = ({ weeklyData = [], title = "Atividade Semanal", className
     const today = new Date();
     const data = [];
     
+  
+    const sampleData = [85, 92, 78, 95, 67, 89, 73];
+    
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dayName = days[date.getDay()];
       
-      
-      const existingData = weeklyData.find(d => 
-        new Date(d.date).toDateString() === date.toDateString()
-      );
+      const percentage = sampleData[6 - i];
+      const goalsCompleted = Math.floor((percentage / 100) * 8);
       
       data.push({
         day: dayName,
         date: date.toISOString().split('T')[0],
-        percentage: existingData?.percentage || Math.floor(Math.random() * 100),
-        goalsCompleted: existingData?.goalsCompleted || Math.floor(Math.random() * 8),
-        totalGoals: existingData?.totalGoals || 8
+        percentage: percentage,
+        goalsCompleted: goalsCompleted,
+        totalGoals: 8
       });
     }
     
@@ -110,7 +111,7 @@ const ProgressChart = ({ weeklyData = [], title = "Atividade Semanal", className
                 variants={barVariants}
                 custom={item.percentage}
               >
-                <BarValue opacity={item.percentage > 30 ? 1 : 0}>
+                <BarValue opacity={item.percentage > 20 ? 1 : 0}>
                   {item.percentage}%
                 </BarValue>
                 <Bar
