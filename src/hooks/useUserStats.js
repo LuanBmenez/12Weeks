@@ -153,6 +153,12 @@ export const useUserStats = () => {
   };
 
   const calculateCurrentStreak = () => {
+    // Se o usuário tem dados reais de streak, use-os
+    if (user?.streakData?.currentStreak !== undefined) {
+      return user.streakData.currentStreak;
+    }
+    
+    // Fallback: calcular baseado no progresso diário (sistema antigo)
     if (!user?.dailyProgress) return 0;
     
     const today = new Date();

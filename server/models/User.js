@@ -173,6 +173,36 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+  
+  // Sistema de streak real
+  streakData: {
+    currentStreak: {
+      type: Number,
+      default: 0
+    },
+    longestStreak: {
+      type: Number,
+      default: 0
+    },
+    lastActivityDate: {
+      type: Date,
+      default: null
+    },
+    streakHistory: [{
+      date: {
+        type: Date,
+        required: true
+      },
+      completed: {
+        type: Boolean,
+        default: false
+      },
+      percentage: {
+        type: Number,
+        default: 0
+      }
+    }]
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -388,6 +418,103 @@ userSchema.methods.checkWeekAdvance = function(roomId) {
   }
   
   return false;
+};
+
+// Método para atualizar o streak baseado na atividade diária
+userSchema.methods.updateStreak = function(roomId, dailyPercentage) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Verifica se já existe entrada para hoje
+  const todayEntry = this.streakData.streakHistory.find(entry => 
+    entry.date.toDateString() === today.toDateString()
+  );
+  
+  if (todayEntry) {
+    // Atualiza entrada existente
+    todayEntry.completed = dailyPercentage > 0;
+    todayEntry.percentage = dailyPercentage;
+  } else {
+    // Adiciona nova entrada
+    this.streakData.streakHistory.push({
+      date: today,
+      completed: dailyPercentage > 0,
+      percentage: dailyPercentage
+    });
+  }
+  
+  // Atualiza data da última atividade
+  this.streakData.lastActivityDate = today;
+  
+  // Calcula streak atual
+  this.calculateCurrentStreak();
+  
+  return this.streakData.currentStreak;
+};
+
+// Método para calcular o streak atual
+userSchema.methods.calculateCurrentStreak = function() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let currentStreak = 0;
+  let checkDate = new Date(today);
+  
+  // Ordena o histórico por data (mais recente primeiro)
+  const sortedHistory = this.streakData.streakHistory.sort((a, b) => b.date - a.date);
+  
+  // Conta dias consecutivos de atividade
+  for (let i = 0; i < sortedHistory.length; i++) {
+    const entry = sortedHistory[i];
+    const entryDate = new Date(entry.date);
+    entryDate.setHours(0, 0, 0, 0);
+    
+    // Verifica se é o dia esperado (hoje, ontem, anteontem, etc.)
+    const expectedDate = new Date(today);
+    expectedDate.setDate(today.getDate() - i);
+    
+    if (entryDate.getTime() === expectedDate.getTime() && entry.completed) {
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
+  
+  this.streakData.currentStreak = currentStreak;
+  
+  // Atualiza o maior streak se necessário
+  if (currentStreak > this.streakData.longestStreak) {
+    this.streakData.longestStreak = currentStreak;
+  }
+  
+  return currentStreak;
+};
+
+// Método para obter o streak atual (compatibilidade com frontend)
+userSchema.methods.getCurrentStreak = function() {
+  // Se tem dados de streak E tem histórico real, retorna
+  if (this.streakData?.currentStreak !== undefined && 
+      this.streakData?.streakHistory?.length > 0) {
+    return this.streakData.currentStreak;
+  }
+  
+  // Se não tem dados de streak mas tem progresso diário, retorna 1 dia para primeiro streak
+  if (this.dailyProgress && this.dailyProgress.length > 0) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Verifica se tem progresso hoje
+    const todayProgress = this.dailyProgress.find(progress => 
+      progress.date.toDateString() === today.toDateString() && 
+      progress.dailyPercentage > 0
+    );
+    
+    if (todayProgress) {
+      return 1; // Primeiro streak sempre é 1 dia
+    }
+  }
+  
+  return 0;
 };
 
 export default mongoose.model('User', userSchema);

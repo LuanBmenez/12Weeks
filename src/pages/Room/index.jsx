@@ -666,7 +666,6 @@ const Room = () => {
   };
 
   const getParticipantProgress = (participant) => {
-    
     if (participant.progress && participant.progress.hasGoals) {
       return participant.progress.dailyPercentage || 0;
     }
@@ -717,25 +716,20 @@ const Room = () => {
   };
 
   const getHotStreak = (participant) => {
-
-    const progress = getParticipantProgress(participant);
-    const completedGoals = participant.progress?.goals?.filter(g => g.completed).length || 0;
-    const totalGoals = participant.progress?.goals?.length || 0;
-    
-    if (progress > 0 && totalGoals > 0) {
-
-      const completionRate = completedGoals / totalGoals;
-      
-      if (progress >= 100 && completionRate === 1) {
-        return Math.min(Math.floor(progress / 15), 7); 
-      } else if (progress >= 75 && completionRate >= 0.8) {
-        return Math.min(Math.floor(progress / 20), 5);
-      } else if (progress >= 50 && completionRate >= 0.6) {
-        return Math.min(Math.floor(progress / 25), 3); 
-      } else if (progress >= 25) {
-        return 1;
-      }
+    // Se o participante tem dados reais de streak E tem histórico, use-os
+    if (participant.user?.streakData?.currentStreak !== undefined && 
+        participant.user?.streakData?.streakHistory?.length > 0) {
+      return participant.user.streakData.currentStreak;
     }
+
+    // Fallback: calcular baseado no progresso atual
+    const progress = getParticipantProgress(participant);
+    
+    // Se tem progresso, sempre mostra pelo menos 1 dia
+    if (progress > 0) {
+      return 1; // Primeiro streak sempre é 1 dia
+    }
+    
     return 0;
   };
 

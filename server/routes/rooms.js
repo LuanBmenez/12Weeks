@@ -163,8 +163,16 @@ router.get('/:roomId', auth, async (req, res) => {
           };
         });
 
+        const currentStreak = participantUser.getCurrentStreak();
+        
         return {
           ...participant.toObject(),
+          user: {
+            ...participantUser.toObject(),
+            // Inclui dados de streak para compatibilidade com frontend
+            currentStreak: currentStreak,
+            streakData: participantUser.streakData
+          },
           progress: {
             dailyPercentage: participantDailyPercentage,
             hasGoals: participantGoals.length > 0,
