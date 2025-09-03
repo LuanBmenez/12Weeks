@@ -211,6 +211,10 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  lastActivity: {
+    type: Date,
+    default: null
+  },
   resetPasswordToken: {
     type: String,
     default: undefined
@@ -515,6 +519,42 @@ userSchema.methods.getCurrentStreak = function() {
   }
   
   return 0;
+};
+
+// Método para atualizar a última atividade do usuário
+userSchema.methods.updateLastActivity = function() {
+  this.lastActivity = new Date();
+  return this.save();
+};
+
+// Método para calcular tempo desde a última atividade
+userSchema.methods.getTimeSinceLastActivity = function() {
+  if (!this.lastActivity) {
+    return null;
+  }
+  
+  const now = new Date();
+  const diffInMinutes = Math.floor((now - this.lastActivity) / (1000 * 60));
+  
+  if (diffInMinutes < 1) {
+    return { text: 'Ativo agora', class: 'active', minutes: 0 };
+  } else if (diffInMinutes < 60) {
+    return { text: `Ativo há ${diffInMinutes}min`, class: 'active', minutes: diffInMinutes };
+  } else if (diffInMinutes < 120) {
+    return { text: 'Ativo há 1h', class: 'active', minutes: diffInMinutes };
+  } else if (diffInMinutes < 180) {
+    return { text: 'Ativo há 2h', class: 'active', minutes: diffInMinutes };
+  } else if (diffInMinutes < 240) {
+    return { text: 'Ativo há 3h', class: 'inactive', minutes: diffInMinutes };
+  } else if (diffInMinutes < 360) {
+    return { text: 'Ativo há 4h', class: 'inactive', minutes: diffInMinutes };
+  } else if (diffInMinutes < 1440) { // Menos de 24 horas
+    const hours = Math.floor(diffInMinutes / 60);
+    return { text: `Ativo há ${hours}h`, class: 'inactive', minutes: diffInMinutes };
+  } else {
+    const days = Math.floor(diffInMinutes / 1440);
+    return { text: `Ativo há ${days} dias`, class: 'inactive', minutes: diffInMinutes };
+  }
 };
 
 export default mongoose.model('User', userSchema);

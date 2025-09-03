@@ -169,9 +169,10 @@ router.get('/:roomId', auth, async (req, res) => {
           ...participant.toObject(),
           user: {
             ...participantUser.toObject(),
-            // Inclui dados de streak para compatibilidade com frontend
             currentStreak: currentStreak,
-            streakData: participantUser.streakData
+            streakData: participantUser.streakData,
+            lastActivity: participantUser.lastActivity,
+            timeSinceLastActivity: participantUser.getTimeSinceLastActivity()
           },
           progress: {
             dailyPercentage: participantDailyPercentage,

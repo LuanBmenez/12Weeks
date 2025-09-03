@@ -52,6 +52,11 @@ export const auth = async (req, res, next) => {
 
     req.user = user;
     req.token = decoded;
+    
+    user.updateLastActivity().catch(err => 
+      console.error('Erro ao atualizar última atividade:', err)
+    );
+    
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

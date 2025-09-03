@@ -97,6 +97,9 @@ export const MessageBubble = styled.div`
       margin-left: 12px;
     }
     
+    ${MessageTime} {
+      align-self: flex-end;
+    }
 
     &:hover .edit-button-container {
       opacity: 1 !important;
@@ -133,7 +136,7 @@ export const MessageTime = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  align-self: flex-end;
+  align-self: flex-start;
 `;
 
 export const Avatar = styled.div`

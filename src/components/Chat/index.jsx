@@ -103,11 +103,14 @@ const Chat = ({ messages, currentMessage, setCurrentMessage, sendMessage, user, 
       </ChatHeader>
       
       <Messages>
-        {messages.map((msg, index) => (
-          <MessageBubble 
-            key={msg._id || index} 
-            isOwner={msg.author._id === user?._id || msg.author._id?.toString() === user?._id?.toString()}
-          >
+        {messages.map((msg, index) => {
+          const isOwner = msg.author._id === user?._id || msg.author._id?.toString() === user?._id?.toString();
+          
+          return (
+            <MessageBubble 
+              key={msg._id || index} 
+              isOwner={isOwner}
+            >
             <Avatar>
               {msg.author.profilePicture ? (
                 <img src={msg.author.profilePicture} alt={msg.author.name} />
@@ -168,7 +171,8 @@ const Chat = ({ messages, currentMessage, setCurrentMessage, sendMessage, user, 
               </div>
             ) : null}
           </MessageBubble>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </Messages>
       

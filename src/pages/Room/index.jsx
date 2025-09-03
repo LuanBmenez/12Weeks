@@ -734,16 +734,17 @@ const Room = () => {
   };
 
   const getLastActivity = (participant) => {
+    if (participant.user._id === user?._id) {
+      return { text: 'Ativo agora', class: 'active' };
+    }
+
+    if (participant.user?.timeSinceLastActivity) {
+      return participant.user.timeSinceLastActivity;
+    }
 
     const progress = getParticipantProgress(participant);
     const totalGoals = participant.progress?.goals?.length || 0;
     
-
-    if (participant.user._id === user?._id) {
-      return { text: 'Ativo agora', class: 'active' };
-    }
-    
-
     if (progress > 0) {
       if (progress >= 100) {
         return { text: 'Ativo agora', class: 'active' };
@@ -758,12 +759,10 @@ const Room = () => {
       }
     }
     
-
     if (totalGoals > 0) {
       return { text: 'Ativo há 6h', class: 'inactive' };
     }
     
-
     return { text: 'Sem atividade', class: 'inactive' };
   };
 

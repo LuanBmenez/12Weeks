@@ -9,6 +9,7 @@ Uma plataforma colaborativa para definir, acompanhar e completar metas ao longo 
 - **Acompanhamento diário**: Marque suas metas como completas todos os dias
 - **Progresso semanal**: Visualize seu desempenho da semana atual
 - **Progresso geral**: Acompanhe seu progresso ao longo das 12 semanas
+- **Sistema de streak**: Rastreie dias consecutivos de atividade com badges visuais
 - **Feedback inteligente**: Sistema sugere ajustes baseado no seu desempenho
 
 ### 👥 Sistema Social
@@ -17,6 +18,7 @@ Uma plataforma colaborativa para definir, acompanhar e completar metas ao longo 
 - **Lista de amigos**: Gerencie suas conexões e veja quem está online
 - **Convites para salas**: Convide amigos para participar das suas salas
 - **Progresso compartilhado**: Veja o progresso dos participantes da sala
+- **Chat em tempo real**: Comunique-se com participantes da sala via chat integrado
 
 ### 🔐 Autenticação e Segurança
 - **Registro e login** seguros
@@ -35,6 +37,7 @@ Uma plataforma colaborativa para definir, acompanhar e completar metas ao longo 
 - **express-validator** para validação
 - **helmet** para segurança HTTP
 - **cors** para controle de acesso
+- **Socket.io** para chat em tempo real
 
 ### Frontend
 - **React 19** com hooks modernos
@@ -43,6 +46,7 @@ Uma plataforma colaborativa para definir, acompanhar e completar metas ao longo 
 - **Axios** para requisições HTTP
 - **Lucide React** para ícones
 - **Context API** para gerenciamento de estado
+- **Socket.io Client** para chat em tempo real
 
 ### Ferramentas de Desenvolvimento
 - **Vite** para build e desenvolvimento
@@ -226,6 +230,13 @@ src/
   - 80-90%: Nível adequado
   - > 90%: Metas muito fáceis
 
+### Sistema de Streak
+- **Primeiro streak**: Sempre inicia com 1 dia
+- **Cálculo real**: Baseado em atividade diária consecutiva
+- **Histórico**: Mantém registro de todos os dias de atividade
+- **Badges visuais**: 🔥 X dias para motivar consistência
+- **Reset automático**: Quando não há atividade por 1 dia
+
 ## 🎯 Características do Sistema
 
 ### Códigos de Amigo
@@ -244,6 +255,8 @@ src/
 - **Limite**: 5 metas por semana
 - **Persistência**: Metas continuam automaticamente
 - **Colaborativo**: Veja progresso de todos os participantes
+- **Chat integrado**: Comunicação em tempo real entre participantes
+- **Metas da sala**: Metas coletivas definidas pelo admin
 
 ## 🔐 Segurança
 
@@ -263,6 +276,24 @@ src/
 - **Navegação intuitiva** com React Router
 - **Animações suaves** com Styled Components
 - **Temas consistentes** em toda a aplicação
+- **Chat responsivo** com posicionamento correto de mensagens
+- **Badges de streak** com cores e animações visuais
+
+## 🆕 Melhorias Recentes
+
+### Sistema de Streak Aprimorado
+- **Cálculo real**: Baseado em atividade diária consecutiva
+- **Primeiro streak**: Sempre inicia com 1 dia para novos usuários
+- **Histórico persistente**: Mantém registro de todos os dias de atividade
+- **Badges visuais**: 🔥 X dias para motivar consistência
+- **Reset inteligente**: Quando não há atividade por 1 dia
+
+### Chat em Tempo Real
+- **Comunicação instantânea** entre participantes da sala
+- **Posicionamento correto**: Mensagens recebidas à esquerda, enviadas à direita
+- **Timestamps precisos**: Alinhados corretamente com as mensagens
+- **Edição de mensagens**: Possibilidade de editar mensagens enviadas
+- **Interface responsiva**: Funciona perfeitamente em mobile e desktop
 
 ## 🧪 Testando o Sistema
 
@@ -310,6 +341,9 @@ npm run build
 
 ## 📝 Roadmap
 
+- [x] **Sistema de streak** com badges visuais
+- [x] **Chat em tempo real** entre participantes
+- [x] **Metas da sala** coletivas
 - [ ] **Sistema de notificações** push
 - [ ] **Relatórios** de progresso detalhados
 - [ ] **Gamificação** com badges e conquistas
