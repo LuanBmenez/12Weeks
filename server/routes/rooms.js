@@ -102,6 +102,7 @@ router.get('/:roomId', auth, async (req, res) => {
       progress.date.toDateString() === today.toDateString()
     );
 
+    // Se não existe progresso para hoje, cria um novo com todas as metas como não concluídas
     if (!userTodayProgress && userGoals.length > 0) {
       userTodayProgress = {
         roomId: room._id,
@@ -187,9 +188,32 @@ router.get('/:roomId', auth, async (req, res) => {
 
     
     const activeRoomGoals = room.roomGoals.filter(goal => goal.isActive);
-    const todayRoomProgress = room.roomDailyProgress.find(progress => 
+    let todayRoomProgress = room.roomDailyProgress.find(progress => 
       progress.date.toDateString() === today.toDateString()
     );
+    
+    // Se não existe progresso da sala para hoje, cria um novo
+    if (!todayRoomProgress && activeRoomGoals.length > 0) {
+      todayRoomProgress = {
+        date: today,
+        completedGoals: [],
+        dailyPercentage: 0
+      };
+      
+      // Inicializa o progresso para todos os participantes
+      room.participants.forEach(participant => {
+        activeRoomGoals.forEach(goal => {
+          todayRoomProgress.completedGoals.push({
+            goalId: goal._id,
+            userId: participant.user,
+            completed: false
+          });
+        });
+      });
+      
+      room.roomDailyProgress.push(todayRoomProgress);
+      await room.save();
+    }
     
     
     const roomGoalsWithUserProgress = activeRoomGoals.map(goal => {

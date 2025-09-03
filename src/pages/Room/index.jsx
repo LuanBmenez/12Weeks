@@ -182,25 +182,20 @@ const Room = () => {
 
   useEffect(() => {
     const checkDayChange = () => {
-      const now = new Date();
-      const currentDay = now.getDate();
+      const today = new Date().toDateString(); // Formato: "Mon Jan 01 2024"
+      const lastDay = localStorage.getItem(`lastDay_${roomId}`);
       
-      const lastLoadTime = localStorage.getItem(`lastRoomLoad_${roomId}`);
-      if (lastLoadTime) {
-        const lastLoadDate = new Date(lastLoadTime);
-        const lastLoadDay = lastLoadDate.getDate();
-        
-        if (currentDay !== lastLoadDay) {
-          console.log('Dia mudou, recarregando sala...');
-          loadRoom();
-        }
+      if (lastDay && lastDay !== today) {
+        console.log('Dia mudou, resetando metas...');
+        loadRoom();
       }
       
-      localStorage.setItem(`lastRoomLoad_${roomId}`, now.toISOString());
+      localStorage.setItem(`lastDay_${roomId}`, today);
     };
 
     checkDayChange();
 
+    // Verifica a cada minuto se mudou o dia
     const interval = setInterval(checkDayChange, 60000);
 
     return () => clearInterval(interval);
@@ -208,16 +203,12 @@ const Room = () => {
 
   useEffect(() => {
     const handleFocus = () => {
-      const lastLoadTime = localStorage.getItem(`lastRoomLoad_${roomId}`);
-      if (lastLoadTime) {
-        const lastLoadDate = new Date(lastLoadTime);
-        const now = new Date();
-        const timeDiff = now.getTime() - lastLoadDate.getTime();
-        
-        if (timeDiff > 5 * 60 * 1000) {
-          console.log('Página ganhou foco, sincronizando progresso...');
-          loadRoom();
-        }
+      const today = new Date().toDateString();
+      const lastDay = localStorage.getItem(`lastDay_${roomId}`);
+      
+      if (lastDay && lastDay !== today) {
+        console.log('Página ganhou foco, dia mudou, resetando metas...');
+        loadRoom();
       }
     };
 
