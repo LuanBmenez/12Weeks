@@ -134,7 +134,17 @@ app.use('/uploads', cors(corsOptions), (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Cache-Control', 'public, max-age=31536000');
+
+  // Cache mais inteligente para imagens
+  if (req.url.includes('/profile-pictures/')) {
+    // Para imagens de perfil, cache por 1 hora mas permite revalidação
+    res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+    res.setHeader('ETag', `"${Date.now()}"`);
+  } else {
+    // Para outras imagens, cache por 1 dia
+    res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+  }
+  
   next();
 }, express.static('uploads'));
 
@@ -147,8 +157,17 @@ app.get('/api/image/:folder/:filename', cors(corsOptions), (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'image/*');
   
+  // Headers de cache específicos para imagens via API
+  if (folder === 'profile-pictures') {
+    res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+    res.setHeader('ETag', `"${Date.now()}"`);
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+  }
+  
   res.sendFile(imagePath, (err) => {
     if (err) {
+      console.log(`🖼️ Erro ao servir imagem: ${imagePath}`, err.message);
       res.status(404).json({ message: 'Imagem não encontrada' });
     }
   });

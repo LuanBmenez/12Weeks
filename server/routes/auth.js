@@ -476,11 +476,13 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
     const compressionResult = await imageService.compressProfilePicture(originalPath, compressedPath);
     
     if (!compressionResult.success) {
-      console.error('Erro na compressão:', compressionResult.error);
+      console.error('❌ Erro na compressão:', compressionResult.error);
 
       fs.unlinkSync(originalPath);
       return res.status(500).json({ message: 'Erro ao processar a imagem' });
     }
+    
+    console.log('✅ Compressão concluída com sucesso');
 
 
     try {
@@ -497,7 +499,8 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
 
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
     const baseUrl = `${protocol}://${req.get('host')}`;
-    const profilePictureUrl = `${baseUrl}/api/image/profile-pictures/${req.file.filename}`;
+    // Adiciona cache busting na URL para evitar problemas de cache
+    const profilePictureUrl = `${baseUrl}/api/image/profile-pictures/${req.file.filename}?cb=${Date.now()}`;
 
 
     const user = await User.findByIdAndUpdate(
@@ -506,7 +509,7 @@ router.post('/upload-profile-picture', auth, upload.single('profilePicture'), as
       { new: true }
     ).select('-password -resetPasswordToken -resetPasswordExpires');
 
-
+    console.log('✅ Foto do perfil atualizada com sucesso:', profilePictureUrl);
 
     res.json({
       message: 'Foto do perfil atualizada com sucesso',

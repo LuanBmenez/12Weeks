@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import { useEvents } from '../contexts/EventContext.jsx';
 import { useRooms } from './useRooms';
 import { useFriends } from './useFriends';
 
@@ -7,6 +8,7 @@ export const useUserStats = () => {
   const { user } = useAuth();
   const { rooms } = useRooms();
   const { friends } = useFriends();
+  const { on } = useEvents();
   
   const [stats, setStats] = useState({
     totalRooms: 0,
@@ -76,8 +78,6 @@ export const useUserStats = () => {
       const weeklyStreak = calculateWeeklyStreak();
 
       const totalFocusTime = calculateTotalFocusTime();
-      
-
       const currentStreak = calculateCurrentStreak();
       
       const achievements = calculateAchievements(totalRooms, currentStreak, totalFocusTime, totalFriends, completedGoals, overallProgress);
@@ -141,7 +141,6 @@ export const useUserStats = () => {
       if (progressDate >= thirtyDaysAgo && progress.dailyPercentage > 0) {
         
         const completedGoals = progress.completedGoals?.filter(g => g.completed).length || 0;
-        const totalGoals = progress.completedGoals?.length || 1;
         
         
         const estimatedMinutes = Math.round(completedGoals * 18); 
@@ -153,12 +152,10 @@ export const useUserStats = () => {
   };
 
   const calculateCurrentStreak = () => {
-    // Se o usuário tem dados reais de streak, use-os
     if (user?.streakData?.currentStreak !== undefined) {
       return user.streakData.currentStreak;
     }
     
-    // Fallback: calcular baseado no progresso diário (sistema antigo)
     if (!user?.dailyProgress) return 0;
     
     const today = new Date();
@@ -392,7 +389,17 @@ export const useUserStats = () => {
 
   useEffect(() => {
     calculateStats();
-  }, [calculateStats]);
+  }, [calculateStats, user, rooms, friends]);
+
+  // Escuta eventos de atualização de metas
+  useEffect(() => {
+    const unsubscribe = on('goalUpdated', () => {
+      console.log('Meta atualizada, recalculando estatísticas...');
+      calculateStats();
+    });
+
+    return unsubscribe;
+  }, [on, calculateStats]);
 
   const refreshStats = useCallback(() => {
     setStats(prev => ({ ...prev, loading: true }));

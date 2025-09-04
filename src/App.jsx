@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { EventProvider } from './contexts/EventContext.jsx';
 import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginScreen from './pages/LoginScreen';
@@ -18,7 +19,8 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <ToastProvider maxToasts={5} position="top-right">
+          <EventProvider>
+            <ToastProvider maxToasts={5} position="top-right">
             <Routes>
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginScreen />} />
@@ -59,8 +61,9 @@ function App() {
               } 
             />
           </Routes>
-        </ToastProvider>
-      </AuthProvider>
+            </ToastProvider>
+          </EventProvider>
+        </AuthProvider>
     </BrowserRouter>
     </ErrorBoundary>
   );

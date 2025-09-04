@@ -7,6 +7,7 @@ import { useFriends } from '../../hooks/useFriends';
 import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useEvents } from '../../contexts/EventContext.jsx';
 import { roomsAPI } from '../../config/api';
 import config from '../../config/config';
 
@@ -50,6 +51,7 @@ const Room = () => {
   const { getUnreadCount } = useUnreadMessages();
   const { showSuccess, showError, showWarning } = useToast();
   const { user } = useAuth();
+  const { emit } = useEvents();
 
   const loadRoomData = (roomData) => {
     const activeGoals = roomData.userIndividualGoals?.filter(goal => goal.isActive) || [];
@@ -182,7 +184,7 @@ const Room = () => {
 
   useEffect(() => {
     const checkDayChange = () => {
-      const today = new Date().toDateString(); // Formato: "Mon Jan 01 2024"
+      const today = new Date().toDateString();
       const lastDay = localStorage.getItem(`lastDay_${roomId}`);
       
       if (lastDay && lastDay !== today) {
@@ -195,7 +197,6 @@ const Room = () => {
 
     checkDayChange();
 
-    // Verifica a cada minuto se mudou o dia
     const interval = setInterval(checkDayChange, 60000);
 
     return () => clearInterval(interval);
@@ -386,6 +387,8 @@ const Room = () => {
         const message = completed ? 'Meta concluída! 🎉' : 'Meta desmarcada';
         showSuccess(message);
         
+        // Emite evento para atualizar estatísticas
+        emit('goalUpdated', { goalId, completed, type: 'individual' });
         
         if (completed && user) {
           triggerCelebration(user._id);
@@ -432,6 +435,8 @@ const Room = () => {
         const message = completed ? 'Meta da sala concluída! 🏠' : 'Meta da sala desmarcada';
         showSuccess(message);
         
+        // Emite evento para atualizar estatísticas
+        emit('goalUpdated', { goalId, completed, type: 'room' });
         
         if (completed && user) {
           triggerCelebration(user._id);
@@ -707,18 +712,16 @@ const Room = () => {
   };
 
   const getHotStreak = (participant) => {
-    // Se o participante tem dados reais de streak E tem histórico, use-os
+
     if (participant.user?.streakData?.currentStreak !== undefined && 
         participant.user?.streakData?.streakHistory?.length > 0) {
       return participant.user.streakData.currentStreak;
     }
 
-    // Fallback: calcular baseado no progresso atual
     const progress = getParticipantProgress(participant);
     
-    // Se tem progresso, sempre mostra pelo menos 1 dia
     if (progress > 0) {
-      return 1; // Primeiro streak sempre é 1 dia
+      return 1; 
     }
     
     return 0;

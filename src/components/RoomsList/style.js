@@ -393,14 +393,7 @@ export const RoomsGrid = styled.div`
           gap: 0.25rem;
         }
         
-        .active-participants {
-          color: #059669;
-          font-size: 0.8rem;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
+
       }
       
       .upcoming-goals {

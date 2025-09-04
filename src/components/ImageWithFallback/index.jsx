@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useImageLoader } from '../../hooks/useImageLoader';
+import ImageRetryButton from './ImageRetryButton';
 
 const ImageWithFallback = ({ 
   src, 
@@ -9,29 +11,15 @@ const ImageWithFallback = ({
   onLoad,
   onError 
 }) => {
-  const [imageError, setImageError] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const { src: currentSrc, loaded, error, loading, reload } = useImageLoader(src, {
+    maxRetries: 3,
+    retryDelay: 1000,
+    enableCacheBusting: true,
+    onLoad,
+    onError
+  });
 
-  useEffect(() => {
-    if (src) {
-      setImageError(false);
-      setImageLoaded(false);
-    }
-  }, [src]);
-
-  const handleImageLoad = (e) => {
-    setImageLoaded(true);
-    setImageError(false);
-    if (onLoad) onLoad(e);
-  };
-
-  const handleImageError = (e) => {
-    setImageError(true);
-    setImageLoaded(false);
-    if (onError) onError(e);
-  };
-
-  if (!src || imageError) {
+  if (!src || error) {
     return (
       <div 
         className={`image-fallback ${className}`}
@@ -49,17 +37,19 @@ const ImageWithFallback = ({
           display: 'flex',
           boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
           transition: 'all 0.3s ease',
+          position: 'relative',
           ...style
         }}
       >
         {fallbackText || 'U'}
+        {error && <ImageRetryButton onRetry={reload} loading={loading} />}
       </div>
     );
   }
 
   return (
     <img
-      src={src}
+      src={currentSrc}
       alt={alt}
       className={className}
       style={{
@@ -68,13 +58,11 @@ const ImageWithFallback = ({
         borderRadius: '50%',
         objectFit: 'cover',
         border: '4px solid rgba(255, 255, 255, 0.8)',
-        opacity: imageLoaded ? 1 : 0,
+        opacity: loaded ? 1 : 0.5,
         transition: 'opacity 0.3s ease',
         boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
         ...style
       }}
-      onLoad={handleImageLoad}
-      onError={handleImageError}
     />
   );
 };

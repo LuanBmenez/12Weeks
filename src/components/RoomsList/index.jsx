@@ -35,6 +35,29 @@ const RoomsList = () => {
     useRooms();
   const { getUnreadCount } = useUnreadMessages();
   const { showSuccess, showError, showWarning } = useToast();
+
+  // Função para calcular tempo relativo de forma mais precisa
+  const getTimeAgo = (date) => {
+    const now = new Date();
+    const targetDate = new Date(date);
+    const diffInSeconds = Math.floor((now - targetDate) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'agora mesmo';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} min`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours}h`;
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} dias`;
+    } else {
+      const weeks = Math.floor(diffInSeconds / 604800);
+      return `${weeks} semanas`;
+    }
+  };
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -573,11 +596,7 @@ const RoomsList = () => {
                       </div>
                       
                       <span className="last-activity">
-                        🕒 Última atividade há {Math.floor((Date.now() - new Date(room.updatedAt || room.createdAt).getTime()) / (1000 * 60 * 60))} horas
-                      </span>
-                      
-                      <span className="active-participants">
-                        🟢 {Math.floor((room.participants?.length || 1) * 0.7)} de {room.participants?.length || 1} online
+                        🕒 Última atividade há {getTimeAgo(room.updatedAt || room.createdAt)}
                       </span>
                     </div>
                     

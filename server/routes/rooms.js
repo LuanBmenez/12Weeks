@@ -102,7 +102,6 @@ router.get('/:roomId', auth, async (req, res) => {
       progress.date.toDateString() === today.toDateString()
     );
 
-    // Se não existe progresso para hoje, cria um novo com todas as metas como não concluídas
     if (!userTodayProgress && userGoals.length > 0) {
       userTodayProgress = {
         roomId: room._id,
@@ -192,7 +191,6 @@ router.get('/:roomId', auth, async (req, res) => {
       progress.date.toDateString() === today.toDateString()
     );
     
-    // Se não existe progresso da sala para hoje, cria um novo
     if (!todayRoomProgress && activeRoomGoals.length > 0) {
       todayRoomProgress = {
         date: today,
@@ -200,7 +198,6 @@ router.get('/:roomId', auth, async (req, res) => {
         dailyPercentage: 0
       };
       
-      // Inicializa o progresso para todos os participantes
       room.participants.forEach(participant => {
         activeRoomGoals.forEach(goal => {
           todayRoomProgress.completedGoals.push({
@@ -826,7 +823,6 @@ router.put('/:roomId/room-goals/:goalId', auth, async (req, res) => {
   }
 });
 
-// Rota para buscar mensagens não lidas
 router.get('/unread-messages', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -837,7 +833,6 @@ router.get('/unread-messages', auth, async (req, res) => {
       });
     }
 
-    // Buscar todas as salas do usuário
     const rooms = await Room.find({
       'participants.user': req.user._id,
       isActive: true
@@ -845,9 +840,6 @@ router.get('/unread-messages', auth, async (req, res) => {
 
     const roomIds = rooms.map(room => room._id);
 
-    // Para simplificar, vamos retornar 0 para todas as salas por enquanto
-    // Isso evita o erro 500 e permite que a aplicação funcione
-    // TODO: Implementar sistema de rastreamento de mensagens lidas
     const unreadMessages = roomIds.map(roomId => ({
       roomId: roomId.toString(),
       count: 0
